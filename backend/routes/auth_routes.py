@@ -1,4 +1,4 @@
-from flask import Blueprint , request,jsonify,make_response,current_app
+from flask import Blueprint , request,jsonify,make_response,current_app,redirect,url_for
 from models import db
 from models.users import Users
 import jwt
@@ -7,6 +7,7 @@ import cloudinary
 import cloudinary.uploader
 import datetime
 from functools import wraps
+import requests
 
 auth_user=Blueprint('/auth',__name__)
 
@@ -165,6 +166,7 @@ def logout():
 @auth_user.route('/searchuser',methods=['GET'])
 @authMiddleware
 def searchUser():
+
     try:
         query=request.args.get('search')
         # print(query)
@@ -183,3 +185,65 @@ def searchUser():
     except Exception as e:
         print('Error in search_users:', str(e))
         # return jsonify({'message': 'Internal server error'}), 500
+
+
+# github login
+
+@auth_user.route('github/login')
+# @authMiddleware
+def  github_login():
+    github_client_id=current_app.config['GITHUB_CLIENT_ID']
+    redirect_uri=url_for('/auth.github_callback',_external=True)
+    github_auth_url = (
+        f"https://github.com/login/oauth/authorize"
+        f"?client_id={github_client_id}"
+        f"&redirect_uri={redirect_uri}"
+        f"&scope=read:user"
+    )
+    return redirect(github_auth_url)
+
+#route where the girhub redirect
+
+@auth_user.route('github/callback')
+# @authMiddleware
+def github_callback():
+    code=request.args.get('code')
+    if not code :
+        return jsonify({'error': 'Missing code from GitHub'}), 400
+    #exchange code  for access_token
+    token_url='https://github.com/login/oauth/access_token'
+    client_id=current_app.config['GITHUB_CLIENT_ID']
+    client_secret=current_app.config['GITHUB_CLIENT_SECRET']
+    payload={'client_id':client_id,'client_secret':client_secret,'code':code}
+    headers={'Accept':'application/json'}
+    response=requests.post(token_url,json=payload,headers=headers)
+    token_json=response.json()
+    access_token=token_json.get('access_token')
+    if not access_token:
+        return jsonify({'error': 'Failed to get access token'}), 400
+    user_response = requests.get(
+        'https://api.github.com/user',
+        headers={'Authorization': f'Bearer {access_token}'}
+    )
+    github_data = user_response.json()
+    github_username = github_data.get('login')
+
+    if not github_username:
+        return jsonify({'error': 'Failed to get GitHub username'}), 400
+
+    # Now update user in DB (dummy example, you need to know who is logged in)
+    # For example, you might use session['user_id'] or JWT
+    user_id = request.user.user_id
+    if not user_id:
+        return jsonify({'error': 'User not logged in'}), 401
+
+    from models.users import User, db
+    user = User.query.get(user_id)
+    if user:
+        user.github_username = github_username
+        user.github_verified = True
+        db.session.commit()
+    print('github login verify sussfully')
+
+    # Redirect user back to frontend profile page
+    return redirect("http://localhost:3000/profile?github=verified")
