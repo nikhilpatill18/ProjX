@@ -160,3 +160,26 @@ def logout():
     
     except:
         print('error in logout')
+
+
+@auth_user.route('/searchuser',methods=['GET'])
+@authMiddleware
+def searchUser():
+    try:
+        query=request.args.get('search')
+        # print(query)
+        if not query:
+             return jsonify({'message': 'Search query is required'}), 400
+        users=Users.query.filter((Users.username.ilike(f'%{query}%'))).all()
+        results = [{
+            'user_id': user.user_id,
+            'username': user.username,
+            'email': user.email,
+            'full_name': user.full_name,
+            'profile_photo': user.profile_photo
+        } for user in users]
+        # print(results)
+        return jsonify({'message': 'Search results', 'results': results}),200
+    except Exception as e:
+        print('Error in search_users:', str(e))
+        # return jsonify({'message': 'Internal server error'}), 500
