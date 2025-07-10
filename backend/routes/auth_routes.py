@@ -9,7 +9,7 @@ import datetime
 from functools import wraps
 import requests
 
-auth_user=Blueprint('/auth',__name__)
+auth_user=Blueprint('api/auth',__name__)
 
 bcrypt=Bcrypt()
 cloudinary.config(

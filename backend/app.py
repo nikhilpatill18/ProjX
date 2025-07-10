@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from routes.auth_routes import auth_user 
+from routes.project_routes import project_bp
 from models import db
 app=Flask(__name__)
 from config import Config
@@ -15,6 +16,7 @@ app.config.from_object(Config)
 
 # auth blue print like auth route
 app.register_blueprint(auth_user,url_prefix='/api/auth')
+app.register_blueprint(project_bp,url_prefix='/api/projects')
 
 with app.app_context():
     db.create_all()
