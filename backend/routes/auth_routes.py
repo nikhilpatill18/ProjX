@@ -9,7 +9,7 @@ import datetime
 from functools import wraps
 import requests
 
-auth_user=Blueprint('api/auth',__name__)
+auth_user=Blueprint('/api/auth',__name__)
 
 bcrypt=Bcrypt()
 cloudinary.config(
@@ -58,9 +58,11 @@ def register():
         if (not username or not email or not password or not full_name ):
             respone=make_response(jsonify({'message':'All the Fields are compulsary'}),404)
             return respone
-        existing_user=Users.query.filter((Users.email==email)|(Users.username==username)).first()
-        if(existing_user):
-            return jsonify({'message':'User already exits with same email or username'}),404
+        print('hi')
+        # existing_user=Users.query.filter((Users.email==email)|(Users.username==username)).first()
+        # if(existing_user):
+        #     return jsonify({'message':'User already exits with same email or username'}),404
+        print('hello')
         hash_pass=bcrypt.generate_password_hash(password).decode('utf-8')
         if not file_upload:
             return jsonify({'message':"profilePic is required"}) , 404
@@ -82,20 +84,24 @@ def register():
         }}))
         response.set_cookie('Access-token',token,httponly=True,secure=False)
         return response
-    except :
+    except Exception :
+        print(Exception)
         print('something error in register')
 
 
 
 # login user controller
-@auth_user.route('/login',methods=['POSt'])
+@auth_user.route('/login',methods=['POST'])
 def login():
     username=request.form.get('username')
     password=request.form.get('password')
     print(username,password)
     try:
+        print('hi')
         exitsing_user=Users.query.filter_by(username=username).first()
+        print('hii')
         check_pass=bcrypt.check_password_hash(exitsing_user.password,password)
+        print('hiii')
         print(check_pass)
         if  not check_pass:
             return jsonify({'message':'Please Enter the correct pass'}),500
@@ -112,9 +118,10 @@ def login():
             'profile_photo':exitsing_user.profile_photo
         }}),200)
         response.set_cookie('Access-token',token,httponly=True,secure=False)
+        print(response,'response')
         return response
-    except:
-        print('errro')
+    except Exception:
+        print(Exception)
 
 @auth_user.route('/updateProfile',methods=['POST'])
 @authMiddleware
