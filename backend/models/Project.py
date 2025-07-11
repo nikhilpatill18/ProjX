@@ -6,14 +6,14 @@ class Project(db.Model):
     price = db.Column(db.Float, nullable=False)
     complexity = db.Column(db.String(50))     # e.g., Easy, Medium, Hard
     duration_hours = db.Column(db.Integer)    # e.g., 10 hours
-
+    # subject=db.Column(db.String(50))
     repo_name = db.Column(db.String(100))     # e.g., "my-project"
     repo_url = db.Column(db.String(200))
 
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
     # foreign keys
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
 
     # relationships

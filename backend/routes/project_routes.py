@@ -11,6 +11,8 @@ import google.generativeai as genai
 import requests
 import base64
 import json
+from models.Project import Project
+from models.category import Category
 project_bp=Blueprint('/api/projects',__name__)
 cloudinary.config(
     cloud_name= 'dwg1z2iih',
@@ -91,8 +93,8 @@ def anaylze_repo():
         analyze.get(key, '').lower().startswith('yes')
         for key in ['description', 'installation', 'usage', 'license', 'contributing']
     )
-
-        return jsonify({'isvalid':is_valid,'analysis':analyze})
+        request.repo_url=repo_url
+        return jsonify({'isvalid':is_valid,'analysis':analyze,'repo_name':repo_name})
      except Exception:
           print(Exception)
 
@@ -103,25 +105,52 @@ def anaylze_repo():
 def add_project():
     print('hi')
     try:
-        user=request.user
-        title=request.form.get('tittle')
-        description=request.form.get('description')
+        userID=request.user.user_id
         category=request.files.get('category')
-        subject=request.form.get('subject')
+        cat_id=Category.query.filter(category==category).first().id
+        title=request.form.get('title')
+        description=request.form.get('description')
         price=request.form.get('price')
         complexity=request.form.get('complexity')
-        time=request.form.get('time')
-        images=request.files.get('images')
-        url=request.files.get('url')
-        if category=='SOFTWARE'  or category=='IOT':
-                github_username=user.github_username
-                verified=user.verified
-                if not verified:
-                    return jsonify({'message':'please verify the github first'}),401
+        duration_hours=request.form.get('duration_hours')
+        repo_name=request.form.get('repo_name')
+        repo_url=request.form.get('repo_url')
+        category=request.files.get('category')
+        subject=request.form.get('subject')
+        project=Project(title=title,description =description,price=price,complexity=complexity,duration_hours=duration_hours,repo_name=repo_name,repo_url=repo_url,user_id=userID,category_id=cat_id)
+        db.session.add(project)
+        db.session.commit()
+        print('data added susscfully in the data base')
+        # images=request.files.get('images')
+        # url=request.files.get('url')
+        return jsonify({'repo':repo_url})
         
 
 
     except Exception as e:
         print(e)
-    return jsonify({'message':'work'})
+        return jsonify({'message':'work'})
     
+
+@project_bp.route('/getproject', methods=['GET'])
+def getProject():
+    try:
+          projects=Project.query.all()
+          print(projects)
+          result=[{'project_id':project.id,'title':project.title} for project in projects]
+
+          print('hello')
+          return jsonify({'message':'done','data':result})
+    except  Exception:
+         print(Exception)
+
+
+@project_bp.route('/searchproject',methods=['GET'])
+def search_project():
+     try:
+          query=request.args.get('search')
+          
+          
+          print()
+     except:
+          print('error')

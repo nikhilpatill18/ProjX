@@ -4,6 +4,6 @@ class Category(db.Model):
     name = db.Column(db.String(50), nullable=False, unique=True)
 
     # one category → many projects
-    projects = db.relationship('Project', backref='category', lazy=True)
+    projects = db.relationship('Project', backref='category',)
 
 
