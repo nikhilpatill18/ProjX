@@ -149,8 +149,25 @@ def getProject():
 def search_project():
      try:
           query=request.args.get('search')
-          
+          projects=Project.query.filter((Project.title.ilike(f'%{query}%')|Project.description.ilike(f'%{query}%')))
+          result=[{'project_id':project.id,'title':project.title,'description':project.description} for project in projects]
+
+          if len(result)==0:
+               return jsonify({'messgae':'NO Result Found'},404)
+          return jsonify({'data':result,'success':True}),200
           
           print()
-     except:
-          print('error')
+     except Exception:
+          print(Exception)
+
+@project_bp.route('/projectdetails/<int:id>', methods=['GET'])
+def project_details(id):
+    try:
+         print()
+         project=Project.query.filter(Project.id==id).first()
+         if not project:
+              return jsonify({'message':'Error at  the  serverd side'}),500
+         return jsonify({'message':'Project found successfully','data':{'project_id':project.id,'title':project.title}})
+    except Exception:
+         print(Exception)
+        #  return jsonify({'message': 'done'})
