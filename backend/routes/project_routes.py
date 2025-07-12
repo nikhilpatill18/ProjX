@@ -146,6 +146,7 @@ def getProject():
 
 
 @project_bp.route('/searchproject',methods=['GET'])
+@authMiddleware
 def search_project():
      try:
           query=request.args.get('search')
@@ -161,6 +162,7 @@ def search_project():
           print(Exception)
 
 @project_bp.route('/projectdetails/<int:id>', methods=['GET'])
+@authMiddleware
 def project_details(id):
     try:
          print()
@@ -171,3 +173,6 @@ def project_details(id):
     except Exception:
          print(Exception)
         #  return jsonify({'message': 'done'})
+
+
+
