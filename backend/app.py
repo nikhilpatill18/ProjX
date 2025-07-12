@@ -3,6 +3,7 @@ from flask_cors import CORS
 from routes.auth_routes import auth_user 
 from routes.project_routes import project_bp
 from routes.bookmark_routes import bookmark_bp
+from routes.payment_routes import payment_bp
 from models import db
 app=Flask(__name__)
 from config import Config
@@ -12,6 +13,8 @@ from models.message import Message
 from models.Project import Project
 from models.review import  Review
 from models.users import Users
+from models.payment import Payment
+from models.projectImages import ProjectImage
 
 app.config['SECRET_KEY']='nikhillll18'
 app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///projecthub.db'
@@ -25,7 +28,7 @@ app.config.from_object(Config)
 app.register_blueprint(auth_user,url_prefix='/api/auth')
 app.register_blueprint(project_bp,url_prefix='/api/projects')
 app.register_blueprint(bookmark_bp,url_prefix='/api/bookmark')
-print('hello')
+app.register_blueprint(payment_bp,url_prefix='/api/payment')
 
 
 with app.app_context():
