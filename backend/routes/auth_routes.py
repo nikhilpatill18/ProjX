@@ -32,7 +32,7 @@ def authMiddleware(f):
             print(payload)
             user=Users.query.filter_by(user_id=payload['user_id']).first()
             if not user:
-                return jsonify({"message":'no data found'}),404
+                return jsonify({"message":'no user  found'}),404
             request.user=user
             # request.user=user
         except jwt.ExpiredSignatureError:

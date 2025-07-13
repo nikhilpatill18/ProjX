@@ -13,6 +13,7 @@ import base64
 import json
 from models.Project import Project
 from models.category import Category
+from models.projectImages import ProjectImage
 project_bp=Blueprint('/api/projects',__name__)
 cloudinary.config(
     cloud_name= 'dwg1z2iih',
@@ -106,7 +107,8 @@ def add_project():
     print('hi')
     try:
         userID=request.user.user_id
-        category=request.files.get('category')
+        # category=request.files.get('category')
+        category=request.form.get('category')
         cat_id=Category.query.filter(category==category).first().id
         title=request.form.get('title')
         description=request.form.get('description')
@@ -115,21 +117,28 @@ def add_project():
         duration_hours=request.form.get('duration_hours')
         repo_name=request.form.get('repo_name')
         repo_url=request.form.get('repo_url')
-        category=request.files.get('category')
         subject=request.form.get('subject')
-        project=Project(title=title,description =description,price=price,complexity=complexity,duration_hours=duration_hours,repo_name=repo_name,repo_url=repo_url,user_id=userID,category_id=cat_id)
+        project=Project.query.filter_by(repo_url=repo_url).first()
+        if project:
+             return jsonify({'message':'Project Already registed'})
+        project=Project(title=title,description =description,price=price,complexity=complexity,duration_hours=duration_hours,repo_name=repo_name,repo_url=repo_url,user_id=userID,category_id=cat_id,subject=subject)
         db.session.add(project)
         db.session.commit()
-        print('data added susscfully in the data base')
-        # images=request.files.get('images')
-        # url=request.files.get('url')
+        if 'images' in request.files:
+            images=request.files.getlist('images')
+            for img in images:
+                  upload_result=cloudinary.uploader.upload(img)
+                  db_image=ProjectImage(project_id=project.id,url=upload_result['url'])
+                  db.session.add(db_image)
+            db.session.commit()
+        print('data added succesfully in the data base')
         return jsonify({'repo':repo_url})
         
 
 
     except Exception as e:
         print(e)
-        return jsonify({'message':'work'})
+        return jsonify({'message':'error in adding project'}),500
     
 
 @project_bp.route('/getproject', methods=['GET'])
@@ -137,7 +146,7 @@ def getProject():
     try:
           projects=Project.query.all()
           print(projects)
-          result=[{'project_id':project.id,'title':project.title} for project in projects]
+          result=[{'project_id':project.id,'title':project.title,'images':[img.url for img in project.images]} for project in projects]
 
           print('hello')
           return jsonify({'message':'done','data':result})
@@ -167,9 +176,10 @@ def project_details(id):
     try:
          print()
          project=Project.query.filter(Project.id==id).first()
+         images=project.images
          if not project:
               return jsonify({'message':'Error at  the  serverd side'}),500
-         return jsonify({'message':'Project found successfully','data':{'project_id':project.id,'title':project.title}})
+         return jsonify({'message':'Project found successfully','data':{'project_id':project.id,'title':project.title,'images':[img.url for img in images]}})
     except Exception:
          print(Exception)
         #  return jsonify({'message': 'done'})

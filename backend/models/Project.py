@@ -6,7 +6,7 @@ class Project(db.Model):
     price = db.Column(db.Float, nullable=False)
     complexity = db.Column(db.String(50))     # e.g., Easy, Medium, Hard
     duration_hours = db.Column(db.Integer)    # e.g., 10 hours
-    # subject=db.Column(db.String(50))
+    subject=db.Column(db.String(50),nullable=True)
     repo_name = db.Column(db.String(100))     # e.g., "my-project"
     repo_url = db.Column(db.String(200))
 
@@ -19,4 +19,4 @@ class Project(db.Model):
     # relationships
     bookmarks = db.relationship('Bookmark', backref='project', lazy=True)
     reviews = db.relationship('Review', backref='project', lazy=True)
-
+    images = db.relationship('ProjectImage', backref='project', lazy=True)

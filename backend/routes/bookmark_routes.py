@@ -18,8 +18,9 @@ def get_bookmark():
         bookmarked=Bookmark.query.filter_by(user_id=request.user.user_id).all()
         for bookmark in bookmarked:
             project=Project.query.filter_by(id=bookmark.project_id).first()
-            data.append({'title':project.title,'description':project.description})
-        return jsonify({'message':'success','data':'hello'})
+            images=project.images
+            data.append({'title':project.title,'description':project.description,'images':[img.url for img  in images]})
+        return jsonify({'message':'success','data':data})
         # print()
     except Exception:
         print(Exception)

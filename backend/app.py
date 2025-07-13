@@ -32,6 +32,7 @@ app.register_blueprint(payment_bp,url_prefix='/api/payment')
 
 
 with app.app_context():
+    # db.drop_all()
     db.create_all()
     # cat1=Category(id=1,name='SOFTWARE')
     # cat2=Category(id=2,name='HARDWARE')
