@@ -27,13 +27,15 @@ class Project(db.Model):
 
 
 class SoftwareProject(db.Model):
-    id = db.Column(db.Integer, db.ForeignKey('project.id'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
     readme_verified = db.Column(db.Boolean, default=False)
     tech_stack = db.Column(db.String(200))
     repo_url = db.Column(db.String(200))   
 
 
 class HardwareProject(db.Model):
-    id = db.Column(db.Integer, db.ForeignKey('project.id'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
     video_url = db.Column(db.String(500),nullable=True)
     hardware_verified = db.Column(db.Boolean, default=False)

@@ -11,7 +11,7 @@ import google.generativeai as genai
 import requests
 import base64
 import json
-from models.Project import Project
+from models.Project import Project,SoftwareProject,HardwareProject
 from models.category import Category
 from models.projectImages import ProjectImage
 project_bp=Blueprint('/api/projects',__name__)
@@ -146,34 +146,60 @@ def anaylze_repo():
 @project_bp.route('/add-project',methods=['POST'])
 @authMiddleware
 def add_project():
-    print('hi')
     try:
         userID=request.user.user_id
         category=request.form.get('category')
-        cat_id=Category.query.filter(category==category).first().id
-        title=request.form.get('title')
-        description=request.form.get('description')
-        price=request.form.get('price')
-        complexity=request.form.get('complexity')
-        duration_hours=request.form.get('duration_hours')
-        repo_name=request.form.get('repo_name')
-        repo_url=request.form.get('repo_url')
-        subject=request.form.get('subject')
-        project=Project.query.filter_by(repo_url=repo_url).first()
-        if project:
-             return jsonify({'message':'Project Already registed'})
-        project=Project(title=title,description =description,price=price,complexity=complexity,duration_hours=duration_hours,repo_name=repo_name,repo_url=repo_url,user_id=userID,category_id=cat_id,subject=subject)
-        db.session.add(project)
-        db.session.commit()
-        if 'images' in request.files:
-            images=request.files.getlist('images')
-            for img in images:
-                  upload_result=cloudinary.uploader.upload(img)
-                  db_image=ProjectImage(project_id=project.id,url=upload_result['url'])
-                  db.session.add(db_image)
+        category_obj=Category.query.filter(category==category).first()
+        cat_id=category_obj.id
+        if category=='SOFTWARE':
+            title=request.form.get('title')
+            description=request.form.get('description')
+            price=request.form.get('price')
+            complexity=request.form.get('complexity')
+            duration_hours=request.form.get('duration_hours')
+            repo_name=request.form.get('repo_name')
+            repo_url=request.form.get('repo_url')
+            subject=request.form.get('subject')
+            is_verified=request.form.get('is_verified')
+            tech_stack=request.form.get('tech_stack')
+            existed_project=SoftwareProject.query.filter_by(repo_url=repo_url).first()
+            if existed_project:
+                return jsonify({'message':'Project Already registed'})
+            project=Project(title=title,description =description,price=price,complexity=complexity,duration_hours=duration_hours,user_id=userID,category_id=cat_id,subject=subject)
+            db.session.add(project)
+            db.session.flush()
+            # upload the images to the cloudiniary and data base
+            image_urls=[]
+            if 'images' in request.files:
+                images=request.files.getlist('images')
+                for img in images:
+                    upload_result=cloudinary.uploader.upload(img)
+                    url=upload_result['url']
+                    db_image=ProjectImage(project_id=project.id,url=url)
+                    image_urls.append(url)
+                    db.session.add(db_image)
+                    db.session.flush()
+            software_project=SoftwareProject(project_id=project.id,readme_verified=False if is_verified=='False' else True,tech_stack=tech_stack,repo_url=repo_url)
+            db.session.add(software_project)
             db.session.commit()
-        print('data added succesfully in the data base')
-        return jsonify({'repo':repo_url})
+            print('data added succesfully in the data base')
+            return jsonify({'message':'Project added successFully','data':{
+                'project_id': project.id,
+                'title': project.title,
+                'description': project.description,
+                'price': project.price,
+                'complexity': project.complexity,
+                'duration_hours': project.duration_hours,
+                'subject': project.subject,
+                'is_verified': project.is_verified,
+                'category': category_obj.name,
+                'software': {
+                    'readme_verified': software_project.readme_verified,
+                    'tech_stack': software_project.tech_stack,
+                    'repo_url': software_project.repo_url
+                },
+                'images': image_urls
+            }})
         
 
 
@@ -186,10 +212,41 @@ def add_project():
 def getProject():
     try:
           projects=Project.query.all()
-          print(projects)
-          result=[{'project_id':project.id,'title':project.title,'images':[img.url for img in project.images]} for project in projects]
-
-          print('hello')
+          result=[]
+          for project in projects:
+                print(project.id)
+                category=Category.query.filter_by(id=project.category_id).first()
+                category_name=category.name if category else None
+                if category_name=='SOFTWARE':
+                     software_project=SoftwareProject.query.filter_by(project_id=project.id).first()
+                     software_data=None
+                     print(software_project.id)
+                     if software_project:
+                          software_data={
+                               'readme_verified': software_project.readme_verified,
+                                'tech_stack': software_project.tech_stack,
+                                'repo_url': software_project.repo_url
+                          }
+                else:
+                     hardware_project=HardwareProject.query.filter_by(project_id=project.id).first()
+                     hardware_data=None
+                     if hardware_project:
+                          hardware_data={
+                               'video_url': hardware_project.video_url,
+                                'hardware_verified': hardware_project.hardware_verified,
+                          }
+                result.append({
+                'project_id': project.id,
+                'title': project.title,
+                'images': [img.url for img in project.images],
+                'category': category_name,
+                'Project_data': hardware_data if software_data==None else software_data
+                # 'software': software_data,
+                # # 'Hardware':hardware_data
+                })
+                print(result)
+                     
+    
           return jsonify({'message':'done','data':result})
     except  Exception:
          print(Exception)
@@ -200,8 +257,39 @@ def getProject():
 def search_project():
      try:
           query=request.args.get('search')
-          projects=Project.query.filter((Project.title.ilike(f'%{query}%')|Project.description.ilike(f'%{query}%')))
-          result=[{'project_id':project.id,'title':project.title,'description':project.description} for project in projects]
+          projects=Project.query.filter((Project.title.ilike(f'%{query}%')|Project.description.ilike(f'%{query}%')|Project.subject.ilike(f'%{query}%')))
+          result=[]
+          for project in projects:
+                print(project.id)
+                category=Category.query.filter_by(id=project.category_id).first()
+                category_name=category.name if category else None
+                if category_name=='SOFTWARE':
+                     software_project=SoftwareProject.query.filter_by(project_id=project.id).first()
+                     software_data=None
+                     print(software_project.id)
+                     if software_project:
+                          software_data={
+                               'readme_verified': software_project.readme_verified,
+                                'tech_stack': software_project.tech_stack,
+                                'repo_url': software_project.repo_url
+                          }
+                else:
+                     hardware_project=HardwareProject.query.filter_by(project_id=project.id).first()
+                     hardware_data=None
+                     if hardware_project:
+                          hardware_data={
+                               'video_url': hardware_project.video_url,
+                                'hardware_verified': hardware_project.hardware_verified,
+                          }
+                result.append({
+                'project_id': project.id,
+                'title': project.title,
+                'images': [img.url for img in project.images],
+                'category': category_name,
+                'Project_data': hardware_data if software_data==None else software_data
+                })
+
+          
 
           if len(result)==0:
                return jsonify({'messgae':'NO Result Found'},404)
@@ -215,12 +303,29 @@ def search_project():
 @authMiddleware
 def project_details(id):
     try:
-         print()
-         project=Project.query.filter(Project.id==id).first()
+        #  print()
+         
+         project=Project.query.filter_by(id=id).first()
          images=project.images
+         category_name=Category.query.filter_by(id=project.category_id).first().name
+         print(category_name)
+         if category_name=='SOFTWARE':
+              software_project=SoftwareProject.query.filter_by(project_id=project.id).first()
+              project_data={
+                               'readme_verified': software_project.readme_verified,
+                                'tech_stack': software_project.tech_stack,
+                                'repo_url': software_project.repo_url
+                          }
+         else:
+              hardware_project=HardwareProject.query.filter_by(project_id=project.id).first()
+              project_data={
+                               'video_url': hardware_project.video_url,
+                                'hardware_verified': hardware_project.hardware_verified,
+                          }
+              
          if not project:
               return jsonify({'message':'Error at  the  serverd side'}),500
-         return jsonify({'message':'Project found successfully','data':{'project_id':project.id,'title':project.title,'images':[img.url for img in images]}})
+         return jsonify({'message':'Project found successfully','data':{'project_id':project.id,'title':project.title,'images':[img.url for img in images],'project_data':project_data}})
     except Exception:
          print(Exception)
         #  return jsonify({'message': 'done'})
