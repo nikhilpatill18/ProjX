@@ -22,6 +22,7 @@ cloudinary.config(
 )
 genai.configure(api_key="AIzaSyC71GPRUDdZHAvA0nM9192UZgIwP7zGTV4")
 model=genai.GenerativeModel('gemini-1.5-pro')
+vision_model=genai.GenerativeModel('gemini-1.5-pro-vision')
 
 
 # model to anayize the readme.file
@@ -62,8 +63,49 @@ README:
 
     return json_data
 
+# model to analyze the hardware
+def verify_hardware_images(image_files):
+    """
+    image_files: list of FileStorage objects from request.files.getlist()
+    """
+    for img in image_files:
+        # read bytes
+        img_bytes = img.read()
+
+        prompt = "Does this image show a real hardware prototype, electronic device, or PCB? Answer 'yes' or 'no' and explain briefly."
+        content = [
+            prompt,
+            {"mime_type": img.mimetype, "data": img_bytes}
+        ]
+
+        try:
+            response = model.generate_content(content)
+            answer = response.text.lower()
+            print("Gemini answer:", answer)
+
+            if "yes" in answer:
+                return True
+        except Exception as e:
+            print("Error analyzing image:", e)
+
+    return False
 
 
+
+
+# analyze the harware image photot
+@project_bp.route('/anayze-hardware',methods=['POST'])
+def analyze_image():
+     try:
+          images=request.files.getlist('hardware_image')
+          res=verify_hardware_images(images)
+          print(res)
+          return jsonify({'message':res})
+     except Exception as e:
+          print(e)
+        
+     
+# repo naalyze repo route
 @project_bp.route('/anayze-repo',methods=['POST'])
 @authMiddleware
 def anaylze_repo():
@@ -107,7 +149,6 @@ def add_project():
     print('hi')
     try:
         userID=request.user.user_id
-        # category=request.files.get('category')
         category=request.form.get('category')
         cat_id=Category.query.filter(category==category).first().id
         title=request.form.get('title')
