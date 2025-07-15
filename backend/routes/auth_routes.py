@@ -128,6 +128,7 @@ def register():
     existing_user=Users.query.filter_by(firebase_uid=firebase_uid).first()
     if existing_user:
         return jsonify({'message': 'Profile already exists'}), 400
+    profile_photo=None
     if file_upload :
         upload_result=cloudinary.uploader.upload(file_upload)
         profile_photo=upload_result['url']

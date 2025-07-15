@@ -31,6 +31,12 @@ app.register_blueprint(bookmark_bp,url_prefix='/api/bookmark')
 app.register_blueprint(payment_bp,url_prefix='/api/payment')
 
 
+@app.route('/username',methods=['GET'])
+def usernames():
+    users=Users.query.all()
+    return jsonify({'data':[user.username for user in users]}),200
+
+
 with app.app_context():
     # db.drop_all()
     db.create_all()
