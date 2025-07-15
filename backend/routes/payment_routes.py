@@ -1,5 +1,5 @@
 from models.payment import Payment
-from routes.auth_routes import authMiddleware
+from routes.auth_routes import firebaseAuthmiddleware
 from flask import jsonify,request,make_response,Blueprint
 import stripe
 from models import db
@@ -11,7 +11,7 @@ stripe.api_key="sk_test_51R0dUjCHGVpdj2fgoJEqDBDWUEDbS9rU95DEQcDIxtrkFN1DFTbPm0O
 
 # payment backend created just testing from front is needed
 @payment_bp.route('/create-payment-intent',methods=['POST'])
-@authMiddleware
+@firebaseAuthmiddleware
 def create_payment_intent():
     try:
         print()

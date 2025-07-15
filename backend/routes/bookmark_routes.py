@@ -1,6 +1,6 @@
 from models import db
 from flask import request,make_response,jsonify,current_app,Blueprint
-from routes.auth_routes import authMiddleware
+from routes.auth_routes import firebaseAuthmiddleware
 from models.category import Category
 from models.Project import  Project
 from models.bookmark import Bookmark
@@ -11,7 +11,7 @@ bookmark_bp=Blueprint('bookmark_bp',__name__)
 
 # get the bookmark project
 @bookmark_bp.route('/',methods=['GET'])
-@authMiddleware
+@firebaseAuthmiddleware
 def get_bookmark():
     try:
         data=[]
@@ -26,7 +26,7 @@ def get_bookmark():
         print(Exception)
 # bookmark a project
 @bookmark_bp.route('/<int:project_id>',methods=['POST'])
-@authMiddleware
+@firebaseAuthmiddleware
 def add_bookmark(project_id):
     try:
         user_id=request.user.user_id
@@ -41,7 +41,7 @@ def add_bookmark(project_id):
 
 # remove a book mark project
 @bookmark_bp.route('/<int:project_id>',methods=['DELETE'])
-@authMiddleware
+@firebaseAuthmiddleware
 def remove_bookmark(project_id):
     try:
         user_id=request.user.user_id

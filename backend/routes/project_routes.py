@@ -6,7 +6,7 @@ import cloudinary
 import cloudinary.uploader
 import datetime
 from functools import wraps
-from routes.auth_routes import authMiddleware
+from routes.auth_routes import firebaseAuthmiddleware
 import google.generativeai as genai
 import requests
 import base64
@@ -107,7 +107,7 @@ def analyze_image():
      
 # repo naalyze repo route
 @project_bp.route('/anayze-repo',methods=['POST'])
-@authMiddleware
+@firebaseAuthmiddleware
 def anaylze_repo():
      try:
         user=request.user
@@ -144,7 +144,7 @@ def anaylze_repo():
 
 
 @project_bp.route('/add-project',methods=['POST'])
-@authMiddleware
+@firebaseAuthmiddleware
 def add_project():
     try:
         userID=request.user.user_id
@@ -253,7 +253,7 @@ def getProject():
 
 
 @project_bp.route('/searchproject',methods=['GET'])
-@authMiddleware
+@firebaseAuthmiddleware
 def search_project():
      try:
           query=request.args.get('search')
@@ -300,7 +300,7 @@ def search_project():
           print(Exception)
 
 @project_bp.route('/projectdetails/<int:id>', methods=['GET'])
-@authMiddleware
+@firebaseAuthmiddleware
 def project_details(id):
     try:
         #  print()

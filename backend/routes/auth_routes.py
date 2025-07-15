@@ -8,7 +8,12 @@ import cloudinary.uploader
 import datetime
 from functools import wraps
 import requests
+import firebase_admin
+from firebase_admin import credentials,auth as firebase_auth
 
+
+cred=credentials.Certificate('servicekey.json')
+firebase_admin.initialize_app(cred)
 auth_user=Blueprint('/api/auth',__name__)
 
 bcrypt=Bcrypt()
@@ -21,115 +26,184 @@ cloudinary.config(
 
 # auth middleware
 
-def authMiddleware(f):
+# def authMiddleware(f):
+#     @wraps(f)
+#     def decorated_function(*args,**kwargs):
+#         token=request.cookies.get('Access-token')
+#         if not token:
+#             return jsonify({"message":'Invlaid crendtials'}),401
+#         try:
+#             payload=jwt.decode(token,current_app.config['SECRET_KEY'],algorithms='HS256')
+#             print(payload)
+#             user=Users.query.filter_by(user_id=payload['user_id']).first()
+#             if not user:
+#                 return jsonify({"message":'no user  found'}),404
+#             request.user=user
+#             # request.user=user
+#         except jwt.ExpiredSignatureError:
+#             return jsonify({'message': 'Token expired'}), 401
+#         except jwt.InvalidTokenError:
+#             return jsonify({'message': 'Invalid token'}), 401
+#         return f(*args,**kwargs)
+#     return decorated_function
+
+
+
+def firebaseAuthmiddleware(f):
     @wraps(f)
-    def decorated_function(*args,**kwargs):
-        token=request.cookies.get('Access-token')
+    def decorated(*args,**kwargs):
+        token=request.headers.get('Authorization','').replace('Bearer ','')
         if not token:
-            return jsonify({"message":'Invlaid crendtials'}),401
+            return jsonify({'message':'Missing token'}),401
         try:
-            payload=jwt.decode(token,current_app.config['SECRET_KEY'],algorithms='HS256')
-            print(payload)
-            user=Users.query.filter_by(user_id=payload['user_id']).first()
+            decoded=firebase_auth.verify_id_token(token)
+            firebase_uid=decoded['uid']
+            user = Users.query.filter_by(firebase_uid=firebase_uid).first()
             if not user:
-                return jsonify({"message":'no user  found'}),404
+                return jsonify({'message': 'User profile not found'}), 404
             request.user=user
-            # request.user=user
-        except jwt.ExpiredSignatureError:
-            return jsonify({'message': 'Token expired'}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({'message': 'Invalid token'}), 401
-        return f(*args,**kwargs)
-    return decorated_function
-
-
+        except Exception as e:
+            print(e)
+            return jsonify({'message': 'Invalid or expired token'}), 401
+        return f(*args, **kwargs)
+    return decorated
 
 # register user controller
 @auth_user.route('/register',methods=['POST'])
 def register():
-    username=request.form.get('username')
-    email=request.form.get('email')
-    password=request.form.get('password')
-    full_name=request.form.get('username')
-    file_upload=request.files.get('profile_photo')
-    print(request.form)
-    try:
+    # username=request.form.get('username')
+    # email=request.form.get('email')
+    # password=request.form.get('password')
+    # full_name=request.form.get('username')
+    # file_upload=request.files.get('profile_photo')
+    # print(request.form)
+    # try:
 
-        if (not username or not email or not password or not full_name ):
-            respone=make_response(jsonify({'message':'All the Fields are compulsary'}),404)
-            return respone
-        print('hi')
-        # existing_user=Users.query.filter((Users.email==email)|(Users.username==username)).first()
-        # if(existing_user):
-        #     return jsonify({'message':'User already exits with same email or username'}),404
-        print('hello')
-        hash_pass=bcrypt.generate_password_hash(password).decode('utf-8')
-        if not file_upload:
-            return jsonify({'message':"profilePic is required"}) , 404
+    #     if (not username or not email or not password or not full_name ):
+    #         respone=make_response(jsonify({'message':'All the Fields are compulsary'}),404)
+    #         return respone
+    #     print('hi')
+    #     # existing_user=Users.query.filter((Users.email==email)|(Users.username==username)).first()
+    #     # if(existing_user):
+    #     #     return jsonify({'message':'User already exits with same email or username'}),404
+    #     print('hello')
+    #     hash_pass=bcrypt.generate_password_hash(password).decode('utf-8')
+    #     if not file_upload:
+    #         return jsonify({'message':"profilePic is required"}) , 404
+    #     upload_result=cloudinary.uploader.upload(file_upload)
+    #     print(upload_result['url'])
+    #     user=Users(username=username,password=hash_pass,profile_photo=upload_result['url'],full_name=full_name,email=email)
+    #     db.session.add(user)
+    #     db.session.commit()
+    #     print(user)
+    #     token=jwt.encode({'user_id':user.user_id,'exp':datetime.datetime.utcnow()+datetime.timedelta(hours=1)},
+    #      current_app.config['SECRET_KEY'] ,algorithm='HS256'
+    #                      )
+    #     response=make_response(jsonify({'message':'user created successfull','data':{
+    #         'user_id':user.user_id,
+    #         'username':user.username,
+    #         'email':user.email,
+    #         'full_name':user.full_name,
+    #         'profile_photo':user.profile_photo
+    #     }}))
+    #     response.set_cookie('Access-token',token,httponly=True,secure=False)
+    #     return response
+    # except Exception :
+    #     print(Exception)
+    #     print('something error in register')
+    token=request.headers.get('Authorization','').replace('Bearer ','')
+    try:
+        decoded=firebase_auth.verify_id_token(token)
+        firebase_uid=decoded['uid']
+        email=decoded['email']
+    except Exception as e:
+        print(e)
+        return jsonify({'message': 'Invalid token'}), 401
+    username=request.form.get('username')
+    full_name=request.form.get('full_name')
+    file_upload=request.files.get('profile_photo')
+    if not username or not full_name:
+        return jsonify({'message': 'username and full_name required'}), 400
+    # check if  the user already exits
+    existing_user=Users.query.filter_by(firebase_uid=firebase_uid).first()
+    if existing_user:
+        return jsonify({'message': 'Profile already exists'}), 400
+    if file_upload :
         upload_result=cloudinary.uploader.upload(file_upload)
-        print(upload_result['url'])
-        user=Users(username=username,password=hash_pass,profile_photo=upload_result['url'],full_name=full_name,email=email)
-        db.session.add(user)
-        db.session.commit()
-        print(user)
-        token=jwt.encode({'user_id':user.user_id,'exp':datetime.datetime.utcnow()+datetime.timedelta(hours=1)},
-         current_app.config['SECRET_KEY'] ,algorithm='HS256'
-                         )
-        response=make_response(jsonify({'message':'user created successfull','data':{
+        profile_photo=upload_result['url']
+    user=Users(firebase_uid=firebase_uid,username=username,full_name=full_name,profile_photo=profile_photo,email=email)
+    db.session.add(user)
+    db.session.commit()
+    print(user)
+    return jsonify({'message': 'Profile created successfully', 'data': {
+        'user_id': user.user_id,
+        'username': user.username,
+        'email': user.email,
+        'full_name': user.full_name,
+        'profile_photo': user.profile_photo
+    }}),200
+
+
+
+@auth_user.route('/me')
+@firebaseAuthmiddleware
+def me():
+    try:
+        user=request.user
+        return jsonify({'message':'success','data':{
             'user_id':user.user_id,
-            'username':user.username,
+            'firebase_uid':user.firebase_uid,
+            'fullname':user.full_name,
             'email':user.email,
-            'full_name':user.full_name,
-            'profile_photo':user.profile_photo
-        }}))
-        response.set_cookie('Access-token',token,httponly=True,secure=False)
-        return response
-    except Exception :
-        print(Exception)
-        print('something error in register')
+            'username':user.username,
+            'profile_photo':user.profile_photo,
+            'github_username':user.github_username,
+            'github_verified':user.github_verified
+        }}),200
+    except  Exception as e:
+        print(e)
 
 
 
 # login user controller
-@auth_user.route('/login',methods=['POST'])
-def login():
-    username=request.form.get('username')
-    password=request.form.get('password')
-    print(username,password)
-    try:
-        print('hi')
-        exitsing_user=Users.query.filter_by(username=username).first()
-        print('hii')
-        check_pass=bcrypt.check_password_hash(exitsing_user.password,password)
-        print('hiii')
-        print(check_pass)
-        if  not check_pass:
-            return jsonify({'message':'Please Enter the correct pass'}),500
-        print(exitsing_user.user_id,'user')
-        token=jwt.encode({
-            'user_id':exitsing_user.user_id,
-            'exp':datetime.datetime.utcnow()+datetime.timedelta(hours=1)
-        },current_app.config['SECRET_KEY'],algorithm='HS256')
-        response=make_response(jsonify({'message':'Login Success Fully','data':{
-            'user_id':exitsing_user.user_id,
-            'username':exitsing_user.username,
-            'email':exitsing_user.email,
-            'full_name':exitsing_user.full_name,
-            'profile_photo':exitsing_user.profile_photo
-        }}),200)
-        response.set_cookie('Access-token',token,httponly=True,secure=False)
-        print(response,'response')
-        return response
-    except Exception:
-        print(Exception)
+# @auth_user.route('/login',methods=['POST'])
+# def login():
+#     username=request.form.get('username')
+#     password=request.form.get('password')
+#     print(username,password)
+#     try:
+#         print('hi')
+#         exitsing_user=Users.query.filter_by(username=username).first()
+#         print('hii')
+#         check_pass=bcrypt.check_password_hash(exitsing_user.password,password)
+#         print('hiii')
+#         print(check_pass)
+#         if  not check_pass:
+#             return jsonify({'message':'Please Enter the correct pass'}),500
+#         print(exitsing_user.user_id,'user')
+#         token=jwt.encode({
+#             'user_id':exitsing_user.user_id,
+#             'exp':datetime.datetime.utcnow()+datetime.timedelta(hours=1)
+#         },current_app.config['SECRET_KEY'],algorithm='HS256')
+#         response=make_response(jsonify({'message':'Login Success Fully','data':{
+#             'user_id':exitsing_user.user_id,
+#             'username':exitsing_user.username,
+#             'email':exitsing_user.email,
+#             'full_name':exitsing_user.full_name,
+#             'profile_photo':exitsing_user.profile_photo
+#         }}),200)
+#         response.set_cookie('Access-token',token,httponly=True,secure=False)
+#         print(response,'response')
+#         return response
+#     except Exception:
+#         print(Exception)
 
 @auth_user.route('/updateProfile',methods=['POST'])
-@authMiddleware
+@firebaseAuthmiddleware
 def updateProfile():
     try:
         user=request.user
         username=request.form.get('username')
-        email=request.form.get('email')
         full_name=request.form.get('full_name')
         file_upload=request.files.get('profile_photo')
         if(file_upload):
@@ -137,8 +211,6 @@ def updateProfile():
             user.profile_photo=upload_result['url']
         if username:
             user.username=username
-        if email:
-            user.email=email
         if full_name:
             user.full_name=full_name
         db.session.commit()
@@ -159,7 +231,7 @@ def updateProfile():
 
 
 @auth_user.route('/logout',methods=['GET'])
-@authMiddleware
+@firebaseAuthmiddleware
 def logout():
     try:
         response=make_response({"mesage":'logout'})
@@ -171,7 +243,7 @@ def logout():
 
 
 @auth_user.route('/searchuser',methods=['GET'])
-@authMiddleware
+@firebaseAuthmiddleware
 def searchUser():
 
     try:
