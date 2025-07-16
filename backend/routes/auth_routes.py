@@ -17,11 +17,7 @@ firebase_admin.initialize_app(cred)
 auth_user=Blueprint('/api/auth',__name__)
 
 bcrypt=Bcrypt()
-cloudinary.config(
-    cloud_name= 'dwg1z2iih',
-    api_key= '886927352398459',
-    api_secret= '3PGTVBNx3qQ51x0T7VexbEGVJdU'
-)
+
 
 
 # auth middleware
@@ -71,6 +67,11 @@ def firebaseAuthmiddleware(f):
 # register user controller
 @auth_user.route('/register',methods=['POST'])
 def register():
+    cloudinary.config(
+    cloud_name= current_app.config['CLOUD_NAME'],
+    api_key= current_app.config['CLOUD_API_KEY'],
+    api_secret= current_app.config['CLOUD_API_SECRET']
+)
     # username=request.form.get('username')
     # email=request.form.get('email')
     # password=request.form.get('password')
@@ -202,6 +203,11 @@ def me():
 @auth_user.route('/updateProfile',methods=['POST'])
 @firebaseAuthmiddleware
 def updateProfile():
+    cloudinary.config(
+    cloud_name= current_app.config['CLOUD_NAME'],
+    api_key= current_app.config['CLOUD_API_KEY'],
+    api_secret= current_app.config['CLOUD_API_SECRET']
+)
     try:
         user=request.user
         username=request.form.get('username')

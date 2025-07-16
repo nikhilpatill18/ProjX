@@ -5,7 +5,7 @@ from routes.project_routes import project_bp
 from routes.bookmark_routes import bookmark_bp
 from routes.payment_routes import payment_bp
 from models import db
-app=Flask(__name__)
+
 from config import Config
 from models.category import Category
 from models.bookmark import Bookmark
@@ -15,6 +15,8 @@ from models.review import  Review
 from models.users import Users
 from models.payment import Payment
 from models.projectImages import ProjectImage
+
+app=Flask(__name__)
 
 app.config['SECRET_KEY']='nikhillll18'
 app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///projecthub.db'

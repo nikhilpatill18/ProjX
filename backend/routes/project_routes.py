@@ -20,13 +20,17 @@ cloudinary.config(
     api_key= '886927352398459',
     api_secret= '3PGTVBNx3qQ51x0T7VexbEGVJdU'
 )
-genai.configure(api_key="AIzaSyC71GPRUDdZHAvA0nM9192UZgIwP7zGTV4")
-model=genai.GenerativeModel('gemini-1.5-pro')
+# genai.configure(api_key=current_app.config['GEMINI_API_KEY'])
+# model=genai.GenerativeModel('gemini-1.5-pro')
 vision_model=genai.GenerativeModel('gemini-1.5-pro-vision')
 
 
 # model to anayize the readme.file
 def analyze_readme(readme_text):
+    genai.configure(api_key=current_app.config['GEMINI_API_KEY'])
+    model=genai.GenerativeModel('gemini-1.5-pro')
+    print('hello')
+
     prompt = f"""
 You're an assistant that reviews README.md files.
 
@@ -55,6 +59,7 @@ README:
     text = response.text.strip()
     # Remove possible code fences if Gemini still adds
     text = text.replace('```json', '').replace('```', '').strip()
+    print(text)
 
     try:
         json_data = json.loads(text)
@@ -65,6 +70,10 @@ README:
 
 # model to analyze the hardware
 def verify_hardware_images(image_files):
+    genai.configure(api_key=current_app.config['GEMINI_API_KEY'])
+    model=genai.GenerativeModel('gemini-1.5-pro')
+    print('hello')
+    
     """
     image_files: list of FileStorage objects from request.files.getlist()
     """
@@ -208,7 +217,10 @@ def add_project():
         return jsonify({'message':'error in adding project'}),500
     
 
+
+# get all the project posted by other uiser
 @project_bp.route('/getproject', methods=['GET'])
+@firebaseAuthmiddleware
 def getProject():
     try:
           projects=Project.query.all()
@@ -252,6 +264,8 @@ def getProject():
          print(Exception)
 
 
+
+# search any project
 @project_bp.route('/searchproject',methods=['GET'])
 @firebaseAuthmiddleware
 def search_project():
@@ -299,6 +313,8 @@ def search_project():
      except Exception:
           print(Exception)
 
+
+# get the details of project by Id
 @project_bp.route('/projectdetails/<int:id>', methods=['GET'])
 @firebaseAuthmiddleware
 def project_details(id):
@@ -332,3 +348,52 @@ def project_details(id):
 
 
 
+
+
+# get the project of the loginedIn user
+@project_bp.route('/userprojects',methods=['GET'])
+@firebaseAuthmiddleware
+def get_project():
+    try:
+          user_id=request.user.user_id
+          projects=Project.query.filter_by(user_id=user_id).all()
+          result=[]
+          for project in projects:
+                print(project.id)
+                category=Category.query.filter_by(id=project.category_id).first()
+                category_name=category.name if category else None
+                if category_name=='SOFTWARE':
+                     software_project=SoftwareProject.query.filter_by(project_id=project.id).first()
+                     software_data=None
+                     print(software_project.id)
+                     if software_project:
+                          software_data={
+                               'readme_verified': software_project.readme_verified,
+                                'tech_stack': software_project.tech_stack,
+                                'repo_url': software_project.repo_url
+                          }
+                else:
+                     hardware_project=HardwareProject.query.filter_by(project_id=project.id).first()
+                     hardware_data=None
+                     if hardware_project:
+                          hardware_data={
+                               'video_url': hardware_project.video_url,
+                                'hardware_verified': hardware_project.hardware_verified,
+                          }
+                result.append({
+                'project_id': project.id,
+                'title': project.title,
+                'images': [img.url for img in project.images],
+                'category': category_name,
+                'Project_data': hardware_data if software_data==None else software_data
+                # 'software': software_data,
+                # # 'Hardware':hardware_data
+                })
+                print(result)
+                     
+    
+          return jsonify({'message':'success','data':result}),200
+    except  Exception:
+         print(Exception)
+
+     
