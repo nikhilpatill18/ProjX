@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import {
     ArrowLeft,
     Upload,
@@ -20,14 +20,24 @@ import {
     Github,
     DollarSign,
     Clock,
-    Layers
+    Layers,
+    AArrowDown
 } from 'lucide-react'
+import { NavLink, useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import { AuthContext } from '../context/AuthContext'
+import { toast } from 'react-toastify'
 
 const AddProject = () => {
+    const navigate = useNavigate()
+    const { idtoken, userprofile } = useContext(AuthContext)
     const [category, setCategory] = useState('SOFTWARE')
     const [is_verified, setIsVerified] = useState(false)
+    const [analyze, setanalyze] = useState(false)
     const [images, setImages] = useState([])
     const [imagePreviews, setImagePreviews] = useState([])
+    const [github_verified, setGithubverified] = useState(userprofile.github_verified)
+
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -80,9 +90,36 @@ const AddProject = () => {
         console.log('Adding hardware project:', formData)
     }
 
-    const verifySoftwareProject = () => {
+    const verifySoftwareProject = async () => {
+        if (github_verified) {
+            setanalyze(true)
+            const response = await axios.post('http://127.0.0.1:5000/api/projects/anayze-repo', { 'repo_url': formData.repo_url }, {
+                headers: {
+                    "Content-Type": 'application/json',
+                    'Authorization': `Bearer ${idtoken}`
+                }
+            })
+            if (response.status === 200) {
+                setIsVerified(true)
+                setanalyze(false)
+                toast.success('Project verified')
+            }
+            else if (response.status == 404) {
+                navigate('/signup')
+            }
+            else if (response.status == 401) {
+                navigate('/login')
+            }
+            else {
+                setIsVerified(false)
+                toast.error('Not able to Verify the Project')
+            }
+        }
+        else{
+            toast.info('Please verify Your Github Acoount from Profile')
+        }
+
         // Add verification logic here
-        setIsVerified(true)
     }
 
     const verifyHardwareProject = () => {
@@ -94,11 +131,11 @@ const AddProject = () => {
         <div className="min-h-screen bg-gray-900 p-6">
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
-                <div className="mb-8">
+                <div className="mb-6">
                     <div className="flex items-center space-x-4 mb-6">
-                        <button className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
+                        <NavLink to={'/dashboard'} className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
                             <ArrowLeft className="w-6 h-6 text-gray-400" />
-                        </button>
+                        </NavLink>
                         <div>
                             <h1 className="text-3xl font-bold text-white">Add New Project</h1>
                             <p className="text-gray-400">Create and showcase your latest work</p>
@@ -107,7 +144,7 @@ const AddProject = () => {
                 </div>
 
                 {/* Category Selection */}
-                <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 mb-8">
+                <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 mb-6">
                     <h2 className="text-xl font-bold text-white mb-4">Project Category</h2>
                     <div className="relative">
                         <select
@@ -300,10 +337,15 @@ const AddProject = () => {
                                 <div className="flex justify-center">
                                     <button
                                         onClick={verifySoftwareProject}
-                                        className="px-6 py-3 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition-all duration-300 flex items-center space-x-2"
+                                        className={` ${is_verified ? 'bg-green-400 font-semibold rounded-lg px-6 py-3 text-white hover:bg-green-500' : ' px-6 py-3 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition-all duration-300 flex items-center space-x-2'}`}
+                                        disabled={is_verified}
                                     >
-                                        <Github className="w-5 h-5" />
-                                        <span>Verify Repository</span>
+                                        {
+                                            is_verified ? 'Verified' :
+                                                analyze ? <div className='flex gap-3 justify-center items-center'><span className='font-bold'>Analyzing </span><div className='animate-spin rounded-full h-5 w-5 border border-t-2 border-gray-800'></div></div> : <>
+                                                    <Github className="w-5 h-5" />
+                                                    <span>Verify Repository</span></>
+                                        }
                                     </button>
                                 </div>
                             </>
@@ -378,7 +420,11 @@ const AddProject = () => {
                         <div className="flex justify-center pt-6">
                             <button
                                 onClick={category === 'SOFTWARE' ? handleSoftware : handleHardware}
-                                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
+                                disabled={is_verified}
+                                className={`
+                                    px-8 py-3 ${is_verified ? 'bg-gradient-to-r from-blue-500 to-cyan-500' : 'bg-gradient-to-r from-blue-300 to-cyan-300'} 
+                                     text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2
+                                    `}
                             >
                                 <Save className="w-5 h-5" />
                                 <span>Add Project</span>

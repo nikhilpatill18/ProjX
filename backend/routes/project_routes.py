@@ -121,7 +121,8 @@ def anaylze_repo():
      try:
         user=request.user
         # print(user.github_username)
-        repo_url=request.get_json()['url']
+        print(request.get_json())
+        repo_url=request.get_json()['repo_url']
         if not repo_url:
                jsonify({'message':'Please enter the url'}),404
         print(repo_url.rstrip('/').split('/'))

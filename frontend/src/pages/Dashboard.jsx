@@ -151,7 +151,7 @@ const Dashboard = () => {
                             <MoreVertical className="w-4 h-4 text-white" />
                         </button>
                         {showDropdown === project.id && (
-                            <div className="absolute top-full left-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-10">
+                            <div cl54assName="absolute top-full left-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-10">
                                 <button className="w-full px-4 py-2 text-left hover:bg-gray-700 flex items-center space-x-2">
                                     <Edit className="w-4 h-4" />
                                     <span>Edit Project</span>
