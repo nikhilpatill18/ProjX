@@ -209,7 +209,56 @@ def add_project():
                     'repo_url': software_project.repo_url
                 },
                 'images': image_urls
+            }}),200
+        else :
+             
+            title=request.form.get('title')
+            description=request.form.get('description')
+            price=request.form.get('price')
+            complexity=request.form.get('complexity')
+            duration_hours=request.form.get('duration_hours')
+            subject=request.form.get('subject')
+            is_verified=request.form.get('is_verified')
+          #   existed_project=HardwareProject.query.filter_by(repo_url=repo_url).first()
+          #   if existed_project:
+          #       return jsonify({'message':'Project Already registed'})
+            project=Project(title=title,description =description,price=price,complexity=complexity,duration_hours=duration_hours,user_id=userID,category_id=cat_id,subject=subject)
+            db.session.add(project)
+            db.session.flush()
+            # upload the images to the cloudiniary and data base
+            image_urls=[]
+            if 'images' in request.files:
+                images=request.files.getlist('images')
+                for img in images:
+                    upload_result=cloudinary.uploader.upload(img)
+                    url=upload_result['url']
+                    db_image=ProjectImage(project_id=project.id,url=url)
+                    image_urls.append(url)
+                    db.session.add(db_image)
+                    db.session.flush()
+            hardware_project=HardwareProject(project_id=project.id,hardware_verified=False if is_verified=='False' else True)
+            db.session.add(hardware_project)
+            db.session.commit()
+            print('data added succesfully in the data base')
+            return jsonify({'message':'Project added successFully','data':{
+                'project_id': project.id,
+                'title': project.title,
+                'description': project.description,
+                'price': project.price,
+                'complexity': project.complexity,
+                'duration_hours': project.duration_hours,
+                'subject': project.subject,
+                'is_verified': project.is_verified,
+                'category': category_obj.name,
+                'hardware': {
+                    'hardware_verified': hardware_project.hardware_verified,
+                    # 'tech_stack': software_project.tech_stack,
+                    # 'repo_url': software_project.repo_url
+                },
+                'images': image_urls
             }})
+             
+            return jsonify({'message':'Invalid request'}),400
         
 
 
