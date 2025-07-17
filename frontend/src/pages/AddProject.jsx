@@ -80,13 +80,82 @@ const AddProject = () => {
         setImagePreviews(prev => prev.filter((_, index) => index !== indexToRemove))
     }
 
-    const handleSoftware = () => {
-        // Add software project logic here
+    const handleSoftware = async () => {
+        try {
+            const formdata = new FormData()
+            formdata.append('title', formData.title)
+            formdata.append('description', formData.description)
+            formdata.append('price', formData.price)
+            formdata.append('complexity', formData.complexity)
+            formdata.append('duration_hour', formData.duration_hour)
+            formdata.append('subject', formData.subject)
+            formdata.append('category', category)
+            formdata.append('tech_stack', formData.tech_stack)
+            formdata.append('repo_url', formData.repo_url)
+            formdata.append('is_verified', is_verified)
+            images.forEach((img) => {
+                formdata.append('images', img)
+            })
+
+            const reponse = await axios.post('http://127.0.0.1:5000/api/projects/add-project', formdata, {
+                headers: {
+                    'Authorization': `Bearer ${idtoken}`
+                }
+            })
+            if (reponse.status == 200) {
+                toast.success('Project added success fully')
+            }
+            else {
+                toast.error('Failed to add project')
+            }
+
+
+        } catch (error) {
+            toast.error('Failed to add Project')
+            console.log(error);
+
+
+        }
+
         console.log('Adding software project:', formData)
     }
 
-    const handleHardware = () => {
-        // Add hardware project logic here
+    const handleHardware = async () => {
+
+
+        try {
+            const formdata = new FormData()
+            formdata.append('title', formData.title)
+            formdata.append('description', formData.description)
+            formdata.append('price', formData.price)
+            formdata.append('complexity', formData.complexity)
+            formdata.append('duration_hour', formData.duration_hour)
+            formdata.append('subject', formData.subject)
+            formdata.append('category', category)
+            formdata.append('is_verified', is_verified)
+            images.forEach((img) => {
+                formdata.append('images', img)
+            })
+
+            const reponse = await axios.post('http://127.0.0.1:5000/api/projects/add-project', formdata, {
+                headers: {
+                    'Authorization': `Bearer ${idtoken}`
+                }
+            })
+            if (reponse.status == 200) {
+                toast.success('Project added success fully')
+            }
+            else {
+                toast.error('Failed to add project')
+            }
+
+
+        } catch (error) {
+            toast.error('Failed to add Project')
+            console.log(error);
+
+
+        }
         console.log('Adding hardware project:', formData)
     }
 
@@ -115,16 +184,51 @@ const AddProject = () => {
                 toast.error('Not able to Verify the Project')
             }
         }
-        else{
+        else {
             toast.info('Please verify Your Github Acoount from Profile')
         }
 
         // Add verification logic here
     }
 
-    const verifyHardwareProject = () => {
+    const verifyHardwareProject = async () => {
+
+        setanalyze(true)
+        try {
+            const formdata = new FormData()
+            images.forEach((img) => {
+
+                formdata.append('hardware_images', img)
+            })
+            console.log(formdata)
+            const response = await axios.post('http://127.0.0.1:5000/api/projects/anayze-hardware', formdata, {
+                headers: {
+                    'Authorization': `Bearer ${idtoken}`
+                }
+            })
+            if (response.status == 200) {
+                console.log(response.data.message);
+
+                if (response.data.message == true) {
+                    toast.success('project verified')
+                    setIsVerified(true)
+                    setanalyze(false)
+                }
+                else {
+                    toast.error('Please Add the real Project Images')
+                    setIsVerified(false)
+                    setanalyze(false)
+                }
+
+            }
+
+        } catch (error) {
+            console.log(error);
+
+
+        }
         // Add verification logic here
-        setIsVerified(true)
+        // setIsVerified(true)
     }
 
     return (
@@ -294,6 +398,7 @@ const AddProject = () => {
                                         onChange={handleInputChange}
                                         placeholder="https://github.com/username/repo"
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                        disabled={is_verified}
                                     />
                                 </div>
 
@@ -365,6 +470,7 @@ const AddProject = () => {
                                             onChange={handleImageUpload}
                                             className="hidden"
                                             id="hardware-image-upload"
+                                            disabled={is_verified}
                                         />
                                         <label
                                             htmlFor="hardware-image-upload"
@@ -383,10 +489,16 @@ const AddProject = () => {
                                 <div className="flex justify-center">
                                     <button
                                         onClick={verifyHardwareProject}
-                                        className="px-6 py-3 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition-all duration-300 flex items-center space-x-2"
+                                        className={` ${is_verified ? 'bg-green-400 font-semibold rounded-lg px-6 py-3 text-white hover:bg-green-500' : ' px-6 py-3 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition-all duration-300 flex items-center space-x-2'}`}
+                                        disabled={is_verified}
                                     >
-                                        <Eye className="w-5 h-5" />
-                                        <span>Verify Project</span>
+
+                                        {
+                                            is_verified ? 'Verified' :
+                                                analyze ? <div className='flex gap-3 justify-center items-center'><span className='font-bold'>Analyzing </span><div className='animate-spin rounded-full h-5 w-5 border border-t-2 border-gray-800'></div></div> : <>
+                                                    <Eye className="w-5 h-5" />
+                                                    <span>Verify </span></>
+                                        }
                                     </button>
                                 </div>
                             </>
@@ -405,6 +517,7 @@ const AddProject = () => {
                                                 className="w-full h-24 object-cover rounded-lg border border-gray-600"
                                             />
                                             <button
+
                                                 onClick={() => removeImage(index)}
                                                 className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
                                             >
