@@ -287,7 +287,8 @@ def getProject():
                           software_data={
                                'readme_verified': software_project.readme_verified,
                                 'tech_stack': software_project.tech_stack,
-                                'repo_url': software_project.repo_url
+                                'repo_url': software_project.repo_url,
+                                'tech_stack':software_project.tech_stack
                           }
                 else:
                      hardware_project=HardwareProject.query.filter_by(project_id=project.id).first()
@@ -300,6 +301,8 @@ def getProject():
                 result.append({
                 'project_id': project.id,
                 'title': project.title,
+                'description': project.description,
+                'price':project.price,
                 'images': [img.url for img in project.images],
                 'category': category_name,
                 'Project_data': hardware_data if software_data==None else software_data
