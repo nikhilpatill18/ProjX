@@ -401,7 +401,14 @@ def project_details(id):
          if not project:
               return jsonify({'message':'Error at  the  serverd side'}),500
          return jsonify({'message':'Project found successfully','data':{
-              'project_id':project.id,'title':project.title,'images':[img.url for img in images],'project_data':project_data
+              
+              'project_id':project.id,
+              'title':project.title,
+              'description':project.description,
+              'duration_hours':project.duration_hours,
+              'complexity':project.complexity,
+              'images':[img.url for img in images],
+              'Project_data':project_data
               
               }})
     except Exception:
