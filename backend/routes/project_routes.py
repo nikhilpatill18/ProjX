@@ -364,8 +364,8 @@ def search_project():
 
           
 
-          if len(result)==0:
-               return jsonify({'messgae':'NO Result Found'},404)
+        #   if len(result)==0:
+        #        return jsonify({'messgae':'NO Result Found','data':result}),200
           return jsonify({'data':result,'success':True}),200
           
           print()

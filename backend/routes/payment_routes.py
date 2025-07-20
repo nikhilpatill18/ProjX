@@ -15,24 +15,26 @@ stripe.api_key="sk_test_51R0dUjCHGVpdj2fgoJEqDBDWUEDbS9rU95DEQcDIxtrkFN1DFTbPm0O
 def create_payment_intent():
     try:
         print()
+        user=request.user
         amount=request.form.get('amount')
-        buyer_id=request.form.get('buyer_id')
+        # buyer_id=request.form.get('buyer_i')
         project_id=request.form.get('project_id')
-        if not amount or not buyer_id or not project_id:
+        if not amount or not user.user_id or not project_id:
             return jsonify({'message':'all the thing are required'}),400
         # payment intent
         intent=stripe.PaymentIntent.create(
             amount=amount,
             currency='inr',
-            payment_method_types=['card']
+            payment_method_types=['card'],
         )
 
         # save the payment
         payment=Payment(
-            buyer_id=buyer_id,
+            buyer_id=user.user_id,
             project_id=project_id,amount=amount,payment_intent_id=intent.id,
             status='pending'
         )
+        print(payment)
         db.session.add(payment)
         db.session.commit()
         print(intent.client_secret)
