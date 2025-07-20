@@ -10,6 +10,8 @@ from functools import wraps
 import requests
 import firebase_admin
 from firebase_admin import credentials,auth as firebase_auth
+from models.payment import Payment
+from models.Project import Project
 
 
 cred=credentials.Certificate('servicekey.json')
@@ -152,6 +154,7 @@ def register():
 def me():
     try:
         user=request.user
+
         return jsonify({'message':'success','data':{
             'user_id':user.user_id,
             'firebase_uid':user.firebase_uid,

@@ -14,6 +14,7 @@ import json
 from models.Project import Project,SoftwareProject,HardwareProject
 from models.category import Category
 from models.projectImages import ProjectImage
+from models.payment import Payment
 project_bp=Blueprint('/api/projects',__name__)
 cloudinary.config(
     cloud_name= 'dwg1z2iih',
@@ -258,9 +259,7 @@ def add_project():
                 'images': image_urls
             }})
              
-            return jsonify({'message':'Invalid request'}),400
         
-
 
     except Exception as e:
         print(e)
@@ -273,7 +272,8 @@ def add_project():
 @firebaseAuthmiddleware
 def getProject():
     try:
-          projects=Project.query.all()
+          user=request.user
+          projects=Project.query.filter(Project.user_id!=user.user_id)
           result=[]
           for project in projects:
                 print(project.id)
@@ -301,15 +301,16 @@ def getProject():
                 result.append({
                 'project_id': project.id,
                 'title': project.title,
-                'description': project.description,
+                'description':project.description,
+                'subject':project.subject,  
+                'duration_hours':project.duration_hours ,
                 'price':project.price,
+                'complexity':project.complexity,
                 'images': [img.url for img in project.images],
                 'category': category_name,
                 'Project_data': hardware_data if software_data==None else software_data
-                # 'software': software_data,
-                # # 'Hardware':hardware_data
                 })
-                print(result)
+                # print(result)
                      
     
           return jsonify({'message':'done','data':result})
@@ -351,6 +352,11 @@ def search_project():
                 result.append({
                 'project_id': project.id,
                 'title': project.title,
+                'description':project.description,
+                'subject':project.subject,  
+                'duration_hours':project.duration_hours ,
+                'price':project.price,
+                'complexity':project.complexity,
                 'images': [img.url for img in project.images],
                 'category': category_name,
                 'Project_data': hardware_data if software_data==None else software_data
@@ -394,7 +400,10 @@ def project_details(id):
               
          if not project:
               return jsonify({'message':'Error at  the  serverd side'}),500
-         return jsonify({'message':'Project found successfully','data':{'project_id':project.id,'title':project.title,'images':[img.url for img in images],'project_data':project_data}})
+         return jsonify({'message':'Project found successfully','data':{
+              'project_id':project.id,'title':project.title,'images':[img.url for img in images],'project_data':project_data
+              
+              }})
     except Exception:
          print(Exception)
         #  return jsonify({'message': 'done'})
@@ -436,17 +445,65 @@ def get_project():
                 result.append({
                 'project_id': project.id,
                 'title': project.title,
+                'description':project.description,
+                'subject':project.subject,  
+                'duration_hours':project.duration_hours ,
+                'price':project.price,
+                'complexity':project.complexity,
                 'images': [img.url for img in project.images],
                 'category': category_name,
                 'Project_data': hardware_data if software_data==None else software_data
-                # 'software': software_data,
-                # # 'Hardware':hardware_data
                 })
-                print(result)
                      
     
           return jsonify({'message':'success','data':result}),200
     except  Exception:
          print(Exception)
 
+
+@project_bp.route('/buyed-project',methods=['GET'])
+@firebaseAuthmiddleware
+def buyed_project():
+    try:
+        user=request.user
+        buyed_project=db.session.query(Project).join(Payment).filter(Payment.buyer_id==user.user_id).all()
+        result=[]
+        for project in buyed_project:
+                print(project.id)
+                category=Category.query.filter_by(id=project.category_id).first()
+                category_name=category.name if category else None
+                if category_name=='SOFTWARE':
+                     software_project=SoftwareProject.query.filter_by(project_id=project.id).first()
+                     software_data=None
+                     print(software_project.id)
+                     if software_project:
+                          software_data={
+                               'readme_verified': software_project.readme_verified,
+                                'tech_stack': software_project.tech_stack,
+                                'repo_url': software_project.repo_url
+                          }
+                else:
+                     hardware_project=HardwareProject.query.filter_by(project_id=project.id).first()
+                     hardware_data=None
+                     if hardware_project:
+                          hardware_data={
+                               'video_url': hardware_project.video_url,
+                                'hardware_verified': hardware_project.hardware_verified,
+                          }
+                result.append({
+                'project_id': project.id,
+                'title': project.title,
+                'description':project.description,
+                'subject':project.subject,  
+                'duration_hours':project.duration_hours ,
+                'price':project.price,
+                'complexity':project.complexity,
+                'images': [img.url for img in project.images],
+                'category': category_name,
+                'Project_data': hardware_data if software_data==None else software_data
+                })
+        return jsonify({'message':'success','data':result}),200
+          
+    except:
+          print("error")
      
