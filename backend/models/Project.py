@@ -16,6 +16,11 @@ class Project(db.Model):
     # foreign keys
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
+    status = db.Column(
+        db.Enum('available', 'sold', name='project_status'),
+        nullable=False,
+        default='available'
+    )
 
     # relationships
     bookmarks = db.relationship('Bookmark', backref='project', lazy=True)
