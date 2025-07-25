@@ -15,6 +15,7 @@ from models.Project import Project,SoftwareProject,HardwareProject
 from models.category import Category
 from models.projectImages import ProjectImage
 from models.payment import Payment
+from models.bookmark import Bookmark
 project_bp=Blueprint('/api/projects',__name__)
 cloudinary.config(
     cloud_name= 'dwg1z2iih',
@@ -176,7 +177,7 @@ def add_project():
             existed_project=SoftwareProject.query.filter_by(repo_url=repo_url).first()
             if existed_project:
                 return jsonify({'message':'Project Already registed'})
-            project=Project(title=title,description =description,price=price,complexity=complexity,duration_hours=duration_hours,user_id=userID,category_id=cat_id,subject=subject)
+            project=Project(title=title,description =description,price=price,complexity=complexity,duration_hours=duration_hours,user_id=userID,category_id=cat_id,subject=subject,status='available')
             db.session.add(project)
             db.session.flush()
             # upload the images to the cloudiniary and data base
@@ -194,6 +195,7 @@ def add_project():
             db.session.add(software_project)
             db.session.commit()
             print('data added succesfully in the data base')
+            print(project.id)
             return jsonify({'message':'Project added successFully','data':{
                 'project_id': project.id,
                 'title': project.title,
@@ -204,6 +206,7 @@ def add_project():
                 'subject': project.subject,
                 'is_verified': project.is_verified,
                 'category': category_obj.name,
+                'status':project.status,
                 'software': {
                     'readme_verified': software_project.readme_verified,
                     'tech_stack': software_project.tech_stack,
@@ -273,7 +276,9 @@ def add_project():
 def getProject():
     try:
           user=request.user
-          projects=Project.query.filter(Project.user_id!=user.user_id)
+          projects=Project.query.filter(Project.user_id!=user.user_id).all()
+          bookmark_projects=Bookmark.query.filter(Bookmark.user_id==user.user_id)
+          bookmark_ids={bp.project_id for bp in bookmark_projects}
           result=[]
           for project in projects:
                 print(project.id)
@@ -308,7 +313,10 @@ def getProject():
                 'complexity':project.complexity,
                 'images': [img.url for img in project.images],
                 'category': category_name,
-                'Project_data': hardware_data if software_data==None else software_data
+                'Project_data': hardware_data if software_data==None else software_data,
+                'status': project.status,
+                'bookedmarked':project.id in bookmark_ids,
+                'created_at':project.created_at
                 })
                 # print(result)
                      
@@ -359,7 +367,9 @@ def search_project():
                 'complexity':project.complexity,
                 'images': [img.url for img in project.images],
                 'category': category_name,
-                'Project_data': hardware_data if software_data==None else software_data
+                'Project_data': hardware_data if software_data==None else software_data,
+                'status':project.status,
+                'created_at':project.created_at,
                 })
 
           
@@ -408,7 +418,8 @@ def project_details(id):
               'duration_hours':project.duration_hours,
               'complexity':project.complexity,
               'images':[img.url for img in images],
-              'Project_data':project_data
+              'Project_data':project_data,
+              'status':project.status
               
               }})
     except Exception:
@@ -419,61 +430,68 @@ def project_details(id):
 
 
 
+
+
+
 # get the project of the loginedIn user
 @project_bp.route('/userprojects',methods=['GET'])
 @firebaseAuthmiddleware
 def get_project():
     try:
-          user_id=request.user.user_id
-          projects=Project.query.filter_by(user_id=user_id).all()
-          result=[]
-          for project in projects:
-                print(project.id)
-                category=Category.query.filter_by(id=project.category_id).first()
-                category_name=category.name if category else None
-                if category_name=='SOFTWARE':
-                     software_project=SoftwareProject.query.filter_by(project_id=project.id).first()
-                     software_data=None
-                     print(software_project.id)
-                     if software_project:
-                          software_data={
-                               'readme_verified': software_project.readme_verified,
-                                'tech_stack': software_project.tech_stack,
-                                'repo_url': software_project.repo_url
-                          }
-                else:
-                     hardware_project=HardwareProject.query.filter_by(project_id=project.id).first()
-                     hardware_data=None
-                     if hardware_project:
-                          hardware_data={
-                               'video_url': hardware_project.video_url,
-                                'hardware_verified': hardware_project.hardware_verified,
-                          }
-                result.append({
+        user_id = request.user.user_id  # Make sure request.user is set by middleware/auth
+        projects = Project.query.filter_by(user_id=user_id).all()
+        result = []
+
+        for project in projects:
+            category = Category.query.get(project.category_id)
+            category_name = category.name if category else None
+
+            software_data = None
+            hardware_data = None
+
+            if category_name == 'SOFTWARE':
+                software_project = SoftwareProject.query.filter_by(project_id=project.id).first()
+                if software_project:
+                    software_data = {
+                        'readme_verified': software_project.readme_verified,
+                        'tech_stack': software_project.tech_stack,
+                        'repo_url': software_project.repo_url
+                    }
+            else:
+                hardware_project = HardwareProject.query.filter_by(project_id=project.id).first()
+                if hardware_project:
+                    hardware_data = {
+                        'video_url': hardware_project.video_url,
+                        'hardware_verified': hardware_project.hardware_verified
+                    }
+
+            result.append({
                 'project_id': project.id,
                 'title': project.title,
-                'description':project.description,
-                'subject':project.subject,  
-                'duration_hours':project.duration_hours ,
-                'price':project.price,
-                'complexity':project.complexity,
+                'description': project.description,
+                'subject': project.subject,
+                'duration_hours': project.duration_hours,
+                'price': project.price,
+                'complexity': project.complexity,
                 'images': [img.url for img in project.images],
                 'category': category_name,
-                'Project_data': hardware_data if software_data==None else software_data
-                })
-                     
-    
-          return jsonify({'message':'success','data':result}),200
-    except  Exception:
-         print(Exception)
+                'Project_data': software_data if software_data else hardware_data,
+                'status':project.status,
+                'created_at': project.created_at
+            })
 
+        return jsonify({'message': 'success', 'data': result}), 200
+
+    except Exception as e:
+        print("Error in get_project():", e)
+        return jsonify({'message': 'Error retrieving projects'}), 500
 
 @project_bp.route('/buyed-project',methods=['GET'])
 @firebaseAuthmiddleware
 def buyed_project():
     try:
         user=request.user
-        buyed_project=db.session.query(Project).join(Payment).filter(Payment.buyer_id==user.user_id).all()
+        buyed_project=db.session.query(Project).join(Payment).filter(Payment.buyer_id==user.user_id,Payment.status=='succeeded').all()
         result=[]
         for project in buyed_project:
                 print(project.id)
@@ -507,10 +525,21 @@ def buyed_project():
                 'complexity':project.complexity,
                 'images': [img.url for img in project.images],
                 'category': category_name,
-                'Project_data': hardware_data if software_data==None else software_data
+                'Project_data': hardware_data if software_data==None else software_data,
+                'created_at':project.created_at
                 })
         return jsonify({'message':'success','data':result}),200
           
     except:
           print("error")
      
+
+
+@project_bp.route('<int:project_id>/mark-sold',methods=['PUT'])
+@firebaseAuthmiddleware
+def mark_sold(project_id):
+     user=request.user
+     project=Project.query.get(project_id)
+     project.status='sold'
+     db.session.commit()
+     return jsonify({'message':'project udpated'}),200

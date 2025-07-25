@@ -51,15 +51,18 @@ def firebaseAuthmiddleware(f):
     @wraps(f)
     def decorated(*args,**kwargs):
         token=request.headers.get('Authorization','').replace('Bearer ','')
+        print(token)
         if not token:
             return jsonify({'message':'Missing token'}),401
         try:
             decoded=firebase_auth.verify_id_token(token)
             firebase_uid=decoded['uid']
             user = Users.query.filter_by(firebase_uid=firebase_uid).first()
+            print(user.user_id)
             if not user:
                 return jsonify({'message': 'User profile not found'}), 404
             request.user=user
+            print(user)
         except Exception as e:
             print(e)
             return jsonify({'message': 'Invalid or expired token'}), 401
@@ -154,7 +157,7 @@ def register():
 def me():
     try:
         user=request.user
-
+        # print(user.user_id)
         return jsonify({'message':'success','data':{
             'user_id':user.user_id,
             'firebase_uid':user.firebase_uid,

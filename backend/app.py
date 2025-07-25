@@ -1,54 +1,61 @@
-from flask import Flask,jsonify
+from flask import Flask, jsonify
 from flask_cors import CORS
+from flask_migrate import Migrate
+
+from config import Config
+from models import db
 from routes.auth_routes import auth_user 
 from routes.project_routes import project_bp
 from routes.bookmark_routes import bookmark_bp
 from routes.payment_routes import payment_bp
-from models import db
 
-from config import Config
+# Import all models so Migrate can detect them
 from models.category import Category
 from models.bookmark import Bookmark
 from models.message import Message
 from models.Project import Project
-from models.review import  Review
+from models.review import Review
 from models.users import Users
 from models.payment import Payment
 from models.projectImages import ProjectImage
+from models.Project import SoftwareProject
 
-app=Flask(__name__)
+app = Flask(__name__)
+app.config.from_object(Config)
+app.config['SECRET_KEY'] = 'nikhillll18'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///projecthub.db'
 
-app.config['SECRET_KEY']='nikhillll18'
-app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///projecthub.db'
 db.init_app(app)
+migrate = Migrate(app, db)
 CORS(app)
 
-app.config.from_object(Config)
+# Register routes
+app.register_blueprint(auth_user, url_prefix='/api/auth')
+app.register_blueprint(project_bp, url_prefix='/api/projects')
+app.register_blueprint(bookmark_bp, url_prefix='/api/bookmark')
+app.register_blueprint(payment_bp, url_prefix='/api/payment')
 
 
-# auth blue print like auth route
-app.register_blueprint(auth_user,url_prefix='/api/auth')
-app.register_blueprint(project_bp,url_prefix='/api/projects')
-app.register_blueprint(bookmark_bp,url_prefix='/api/bookmark')
-app.register_blueprint(payment_bp,url_prefix='/api/payment')
 
-
-@app.route('/username',methods=['GET'])
-def usernames():
-    users=Users.query.all()
-    return jsonify({'data':[user.username for user in users]}),200
-
-
-with app.app_context():
-    # db.drop_all()
-    db.create_all()
-    # cat1=Category(id=1,name='SOFTWARE')
-    # cat2=Category(id=2,name='HARDWARE')
-    # db.session.add(cat1)
-    # db.session.add(cat2)
+# with app.app_context():
+#     # Delete all existing categories if needed
+    # db.session.query(Project).delete()
+    # db.session.query(SoftwareProject).delete()
     # db.session.commit()
-    print('data is inserted in the category')
 
+#     # Manually insert categories with specific IDs
+#     category1 = Category(id=1, name="SOFTWARE")
+#     category2 = Category(id=2, name="HARDWARE")
 
-if __name__=="__main__":
+#     db.session.add_all([category1, category2])
+#     db.session.commit()
+
+    # print("✅ Categories inserted with specific IDs.")
+
+@app.route('/username', methods=['GET'])
+def usernames():
+    users = Users.query.all()
+    return jsonify({'data': [user.username for user in users]}), 200
+
+if __name__ == "__main__":
     app.run(debug=True)

@@ -4,7 +4,6 @@ from routes.auth_routes import firebaseAuthmiddleware
 from models.category import Category
 from models.Project import  Project
 from models.bookmark import Bookmark
-print('bookmark file')
 
 bookmark_bp=Blueprint('bookmark_bp',__name__)
 
@@ -25,7 +24,7 @@ def get_bookmark():
     except Exception:
         print(Exception)
 # bookmark a project
-@bookmark_bp.route('/<int:project_id>',methods=['POST'])
+@bookmark_bp.route('/<int:project_id>')
 @firebaseAuthmiddleware
 def add_bookmark(project_id):
     try:
@@ -33,6 +32,7 @@ def add_bookmark(project_id):
         bookmark=Bookmark(user_id=user_id,project_id=project_id)
         db.session.add(bookmark)
         db.session.commit()
+        print('hellllll')
         return jsonify({'message':'book mark added sussfully'}),200
     except Exception as e:
         print(e)
@@ -43,6 +43,7 @@ def add_bookmark(project_id):
 @bookmark_bp.route('/<int:project_id>',methods=['DELETE'])
 @firebaseAuthmiddleware
 def remove_bookmark(project_id):
+    print(project_id,'project id here')
     try:
         user_id=request.user.user_id
         result=Bookmark.query.filter_by(user_id=user_id,project_id=project_id).delete()
@@ -50,4 +51,5 @@ def remove_bookmark(project_id):
         return jsonify({'message':'removed sussfully','result':result}),200
     except Exception as e:
         print(e)
+
  
