@@ -423,6 +423,7 @@ def project_details(id):
                           }
          else:
               hardware_project=HardwareProject.query.filter_by(project_id=project.id).first()
+              
               project_data={
                                'video_url': hardware_project.video_url,
                                 'hardware_verified': hardware_project.hardware_verified,
@@ -432,20 +433,24 @@ def project_details(id):
               return jsonify({'message':'Error at  the  serverd side'}),500
          return jsonify({'message':'Project found successfully','data':{
               
-              'project_id':project.id,
-              'title':project.title,
-              'description':project.description,
-              'duration_hours':project.duration_hours,
-              'complexity':project.complexity,
-              'images':[img.url for img in images],
-              'Project_data':project_data,
-              'status':project.status,
-                              'author':{
+'project_id': project.id,
+                'title': project.title,
+                'description':project.description,
+                'subject':project.subject,  
+                'duration_hours':project.duration_hours ,
+                'price':project.price,
+                'complexity':project.complexity,
+                'images': [img.url for img in project.images],
+                'category': category_name,
+                'Project_data': project_data,
+                'status':project.status,
+                'created_at':project.created_at,
+                'author':{
                      'avatar':owner_data.profile_photo,
                      'name':owner_data.full_name,
                      'email':owner_data.email,
                      'username':owner_data.username
-                }
+                },
               
               }})
     except Exception:
@@ -588,3 +593,20 @@ def mark_sold(project_id):
      project.status='sold'
      db.session.commit()
      return jsonify({'message':'project udpated'}),200
+
+
+
+@project_bp.route('/<int:id>',methods=['DELETE'])
+@firebaseAuthmiddleware
+def delete_project(id):
+     project_id=id
+     try:
+          project=Project.query.get(project_id)
+          print(project)
+          if not project:
+               jsonify({'message':'No project found to delete'}),404
+          db.session.delete(project)
+          db.session.commit()
+          jsonify({'message':'Project Delete Successfull'}),200
+     except Exception as e:
+          print(e)

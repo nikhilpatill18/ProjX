@@ -23,12 +23,12 @@ class Project(db.Model):
     )
 
     # relationships
-    bookmarks = db.relationship('Bookmark', backref='project', lazy=True)
-    reviews = db.relationship('Review', backref='project', lazy=True)
-    images = db.relationship('ProjectImage', backref='project', lazy=True)
+    bookmarks = db.relationship('Bookmark', backref='project', lazy=True, cascade='all, delete-orphan',)
+    reviews = db.relationship('Review', backref='project', lazy=True, cascade='all, delete-orphan',)
+    images = db.relationship('ProjectImage', backref='project', lazy=True, cascade='all, delete-orphan',)
 
-    software = db.relationship('SoftwareProject', backref='project', uselist=False)
-    hardware = db.relationship('HardwareProject', backref='project', uselist=False)
+    software = db.relationship('SoftwareProject', backref='project', uselist=False, cascade='all, delete-orphan',)
+    hardware = db.relationship('HardwareProject', backref='project', uselist=False, cascade='all, delete-orphan',)
 
 
 class SoftwareProject(db.Model):
