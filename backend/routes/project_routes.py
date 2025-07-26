@@ -16,6 +16,7 @@ from models.category import Category
 from models.projectImages import ProjectImage
 from models.payment import Payment
 from models.bookmark import Bookmark
+from models.users import Users
 project_bp=Blueprint('/api/projects',__name__)
 cloudinary.config(
     cloud_name= 'dwg1z2iih',
@@ -282,6 +283,7 @@ def getProject():
           result=[]
           for project in projects:
                 print(project.id)
+                owner_data=Users.query.filter_by(user_id=project.user_id).first()
                 category=Category.query.filter_by(id=project.category_id).first()
                 category_name=category.name if category else None
                 if category_name=='SOFTWARE':
@@ -316,6 +318,12 @@ def getProject():
                 'Project_data': hardware_data if software_data==None else software_data,
                 'status': project.status,
                 'bookedmarked':project.id in bookmark_ids,
+                'author':{
+                     'avatar':owner_data.profile_photo,
+                     'name':owner_data.full_name,
+                     'email':owner_data.email,
+                     'username':owner_data.username
+                },
                 'created_at':project.created_at
                 })
                 # print(result)
@@ -332,12 +340,16 @@ def getProject():
 @firebaseAuthmiddleware
 def search_project():
      try:
+          user=request.user
           query=request.args.get('search')
+          bookmark_projects=Bookmark.query.filter(Bookmark.user_id==user.user_id)
+          bookmark_ids={bp.project_id for bp in bookmark_projects}
           projects=Project.query.filter((Project.title.ilike(f'%{query}%')|Project.description.ilike(f'%{query}%')|Project.subject.ilike(f'%{query}%')))
           result=[]
           for project in projects:
                 print(project.id)
                 category=Category.query.filter_by(id=project.category_id).first()
+                owner_data=Users.query.filter_by(user_id=project.user_id).first()
                 category_name=category.name if category else None
                 if category_name=='SOFTWARE':
                      software_project=SoftwareProject.query.filter_by(project_id=project.id).first()
@@ -369,7 +381,14 @@ def search_project():
                 'category': category_name,
                 'Project_data': hardware_data if software_data==None else software_data,
                 'status':project.status,
+                'bookedmarked':project.id in bookmark_ids,
                 'created_at':project.created_at,
+                'author':{
+                     'avatar':owner_data.profile_photo,
+                     'name':owner_data.full_name,
+                     'email':owner_data.email,
+                     'username':owner_data.username
+                },
                 })
 
           
@@ -389,8 +408,9 @@ def search_project():
 def project_details(id):
     try:
         #  print()
-         
+         user=request.user 
          project=Project.query.filter_by(id=id).first()
+         owner_data=Users.query.filter_by(user_id=project.user_id).first()
          images=project.images
          category_name=Category.query.filter_by(id=project.category_id).first().name
          print(category_name)
@@ -419,7 +439,13 @@ def project_details(id):
               'complexity':project.complexity,
               'images':[img.url for img in images],
               'Project_data':project_data,
-              'status':project.status
+              'status':project.status,
+                              'author':{
+                     'avatar':owner_data.profile_photo,
+                     'name':owner_data.full_name,
+                     'email':owner_data.email,
+                     'username':owner_data.username
+                }
               
               }})
     except Exception:
@@ -440,12 +466,14 @@ def get_project():
     try:
         user_id = request.user.user_id  # Make sure request.user is set by middleware/auth
         projects = Project.query.filter_by(user_id=user_id).all()
+        bookmark_projects=Bookmark.query.filter(Bookmark.user_id==user_id)
+        bookmark_ids={bp.project_id for bp in bookmark_projects}
         result = []
 
         for project in projects:
             category = Category.query.get(project.category_id)
             category_name = category.name if category else None
-
+            owner_data=Users.query.filter_by(user_id=project.user_id).first()
             software_data = None
             hardware_data = None
 
@@ -477,7 +505,14 @@ def get_project():
                 'category': category_name,
                 'Project_data': software_data if software_data else hardware_data,
                 'status':project.status,
-                'created_at': project.created_at
+                'created_at': project.created_at,
+                'author':{
+                     'avatar':owner_data.profile_photo,
+                     'name':owner_data.full_name,
+                     'email':owner_data.email,
+                     'username':owner_data.username
+                },
+                'bookedmarked':project.id in bookmark_ids,
             })
 
         return jsonify({'message': 'success', 'data': result}), 200
@@ -493,10 +528,13 @@ def buyed_project():
         user=request.user
         buyed_project=db.session.query(Project).join(Payment).filter(Payment.buyer_id==user.user_id,Payment.status=='succeeded').all()
         result=[]
+        bookmark_projects=Bookmark.query.filter(Bookmark.user_id==user.user_id)
+        bookmark_ids={bp.project_id for bp in bookmark_projects}
         for project in buyed_project:
                 print(project.id)
                 category=Category.query.filter_by(id=project.category_id).first()
                 category_name=category.name if category else None
+                owner_data=Users.query.filter_by(user_id=project.user_id).first()
                 if category_name=='SOFTWARE':
                      software_project=SoftwareProject.query.filter_by(project_id=project.id).first()
                      software_data=None
@@ -526,7 +564,14 @@ def buyed_project():
                 'images': [img.url for img in project.images],
                 'category': category_name,
                 'Project_data': hardware_data if software_data==None else software_data,
-                'created_at':project.created_at
+                'created_at':project.created_at,
+                'author':{
+                     'avatar':owner_data.profile_photo,
+                     'name':owner_data.full_name,
+                     'email':owner_data.email,
+                     'username':owner_data.username
+                },
+                'bookedmarked':project.id in bookmark_ids,
                 })
         return jsonify({'message':'success','data':result}),200
           
