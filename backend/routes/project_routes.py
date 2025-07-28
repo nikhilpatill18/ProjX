@@ -607,6 +607,25 @@ def delete_project(id):
                jsonify({'message':'No project found to delete'}),404
           db.session.delete(project)
           db.session.commit()
-          jsonify({'message':'Project Delete Successfull'}),200
+          return jsonify({'message':'Project Delete Successfull'}),200
+     except Exception as e:
+          print(e)
+          jsonify({'error':e})
+
+@project_bp.route('/<int:id>',methods=['PUT'])
+def edit_project(id):
+     project_id=id
+     title=request.form.get('title')
+     description=request.form.get('description')
+     price=request.form.get('price')
+     duration_hours=request.form.get('duration_hours')
+     try:
+          project=Project.query.get(project_id)
+          project.title=title
+          project.price=price
+          project.description=description
+          project.duration_hours=duration_hours
+          db.session.commit()
+          return jsonify({'message':'Project data update succesfully'}),200
      except Exception as e:
           print(e)
