@@ -3,6 +3,9 @@ from routes.auth_routes import firebaseAuthmiddleware
 from flask import jsonify,request,make_response,Blueprint
 import stripe
 from models import db
+from models.Project import Project
+from models.users import Users
+from sqlalchemy import or_ 
 
 payment_bp=Blueprint('payment_bp',__name__)
 
@@ -57,3 +60,21 @@ def update_status():
         return jsonify({'message':'status updated successfully'}),200
     except Exception as e:
         print(e)
+
+
+
+@payment_bp.route('/gethistory',methods=['GET'])
+@firebaseAuthmiddleware
+def get_history():
+    user_id=request.user.user_id
+    result=db.session.query(Payment,Project,Users).join(Project,Payment.project_id==Project.id).join(Users,Project.user_id==Users.user_id).filter(or_(
+            Payment.buyer_id == user_id,   # Projects the user bought
+            Project.user_id == user_id     # Projects the user sold
+        )).all()
+    history=[]
+    for payment,project,user in result:
+        print(user_id==payment.buyer_id)
+        history.append({'projectname':project.title,'paymentStatus':payment.status,'paymentDate':payment.created_at,'amount':payment.amount,'username':user.username,'project_id':project.id,'payment_id':payment.id,'project_owner_id':user.user_id,'activity':'bought'if user_id==payment.buyer_id else 'sold'
+                        
+                        })
+    return jsonify({'data':history}),200
