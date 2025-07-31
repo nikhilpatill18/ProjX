@@ -10,20 +10,20 @@ import {
     Filter,
     Calendar,
     User,
-    Eye,
-    Heart,
-    MessageCircle,
-    MoreVertical,
-    Edit,
-    Trash2,
-    ExternalLink
 } from 'lucide-react'
 import axios from 'axios'
+import { useSelector } from 'react-redux'
+import MyProjectCard from '../components/MyProject'
+import History from '../components/History'
+
 
 const Dashboard = () => {
-    const { idtoken } = useContext(AuthContext)
-    console.log(idtoken);
+    const { idtoken, userprofile } = useContext(AuthContext)
+    // console.log(idtoken);
+    console.log(useSelector((state) => state.projects));
 
+    const { bookmark } = useSelector((state) => state.projects)
+    const [myproject,setmyproject]=useState([])
     const [projects, setProjects] = useState([])
     const [filteredProjects, setFilteredProjects] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
@@ -31,9 +31,12 @@ const Dashboard = () => {
     const [filter, setFilter] = useState('all') // all, recent, popular
     const [showDropdown, setShowDropdown] = useState(null)
     const [buyedproject, setbuyedproject] = useState([])
+    const [activetab, setactivetab] = useState('myproject')
+    const [history,sethistory]=useState([])
     useEffect(() => {
         fetchProjects()
         getBuyedproject()
+        fetchHistoy()
     }, [idtoken])
 
     const fetchProjects = async () => {
@@ -41,8 +44,9 @@ const Dashboard = () => {
         try {
             const response = await axios.get('http://127.0.0.1:5000/api/projects/userprojects', { headers: { 'Authorization': `Bearer ${idtoken}` } })
             console.log(response.data.data);
-
+            setmyproject(response.data.data)
             setProjects(response.data.data || [])
+            setFilteredProjects(response.data.data || [])
         } catch (error) {
             console.error('Failed to fetch projects:', error)
         } finally {
@@ -57,7 +61,6 @@ const Dashboard = () => {
                     'Authorization': `Bearer ${idtoken}`
                 }
             })
-            // console.log(response.data.data)
             setbuyedproject(response.data.data)
         }
         catch (error) {
@@ -65,11 +68,66 @@ const Dashboard = () => {
 
         }
     }
+    const fetchHistoy= async()=>{
+        try {
+            const response = await axios.get('http://127.0.0.1:5000/api/payment/gethistory', { headers: { 'Authorization': `Bearer ${idtoken}` } })
+            console.log(response);
+            
+            if(response.status==200){
+                sethistory(response.data.data)
+            }
+            else{
+                console.log(response);
+                
+            }
+            
+            
+        } catch (error) {
+            console.log(error);
+            
+            
+        }
 
+    }
+
+    const filterDashboardProject = () => {
+        let filtered = [...projects]
+
+        if (searchTerm.trim() != '') {
+            filtered = filtered.filter(project => project.title.toLowerCase().includes(searchTerm.toLowerCase()) || project.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        }
+        if (filter == 'recent') {
+            filtered = filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        }
+
+        setFilteredProjects(filtered)
+
+    }
+
+    const handletabChange = () => {
+        if (activetab == 'myproject') {
+            setProjects(myproject)
+            setFilteredProjects(myproject)
+
+        }
+        else if (activetab == 'bought') {
+            setProjects(buyedproject)
+            setFilteredProjects(buyedproject)
+        }
+        else if (activetab == 'bookmark') {
+            setProjects(bookmark)
+            setFilteredProjects(bookmark)
+        }
+
+
+    }
+    useEffect(() => {
+        filterDashboardProject()
+    }, [searchTerm, filter, projects])
 
     useEffect(() => {
-        setFilteredProjects(projects)
-    })
+        handletabChange()
+    }, [activetab])
 
     return (
         <div className="min-h-screen bg-gray-900 p-6">
@@ -77,7 +135,7 @@ const Dashboard = () => {
             <div className="mb-8">
                 <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
+                        <h1 className="text-3xl font-bold text-white mb-2">Welcome Back, {userprofile.username}</h1>
                         <p className="text-gray-400">Manage and track your projects</p>
                     </div>
                     <button
@@ -120,56 +178,61 @@ const Dashboard = () => {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                    <div className="bg-gray-800 border border-gray-700 rounded-xl p-2 lg:p-6">
+                    <div className="bg-gray-800 border border-gray-700 rounded-xl p-2 lg:p-6" onClick={() => setactivetab('myproject')}>
                         <div className="flex items-center space-x-3">
                             <div className="p-3 bg-blue-500/20 rounded-lg">
                                 <User className="w-6 h-6 text-blue-400" />
                             </div>
                             <div>
-                                <p className="text-gray-400 text-sm">Total Projects</p>
-                                <p className="text-2xl font-bold text-white">{projects.length}</p>
+                                <p className="text-gray-400 text-sm">My Projects</p>
+                                <p className="text-2xl font-bold text-white">{myproject.length}</p>
                             </div>
 
                         </div>
                     </div>
-                    {/* <div className="bg-gray-800 border border-gray-700 rounded-xl  p-2 lg:p-6">
+                    <div className="bg-gray-800 border border-gray-700 rounded-xl p-2 lg:p-6" onClick={() => setactivetab('bought')}>
                         <div className="flex items-center space-x-3">
-                            <div className="p-3 bg-green-500/20 rounded-lg">
-                                <Eye className="w-6 h-6 text-green-400" />
+                            <div className="p-3 bg-blue-500/20 rounded-lg">
+                                <User className="w-6 h-6 text-blue-400" />
                             </div>
                             <div>
-                                <p className="text-gray-400 text-sm">Total Views</p>
-                                <p className="text-2xl font-bold text-white">{projects.reduce((sum, p) => sum + p.views, 0)}</p>
+                                <p className="text-gray-400 text-sm">Bought</p>
+                                <p className="text-2xl font-bold text-white">{buyedproject.length}</p>
                             </div>
+
                         </div>
                     </div>
-                    <div className="bg-gray-800 border border-gray-700 rounded-xl  p-2 lg:p-6">
+                    <div className="bg-gray-800 border border-gray-700 rounded-xl p-2 lg:p-6" onClick={() => setactivetab('bookmark')}>
                         <div className="flex items-center space-x-3">
-                            <div className="p-3 bg-purple-500/20 rounded-lg">
-                                <Heart className="w-6 h-6 text-purple-400" />
+                            <div className="p-3 bg-blue-500/20 rounded-lg">
+                                <User className="w-6 h-6 text-blue-400" />
                             </div>
                             <div>
-                                <p className="text-gray-400 text-sm">Total Likes</p>
-                                <p className="text-2xl font-bold text-white">{projects.reduce((sum, p) => sum + p.likes, 0)}</p>
+                                <p className="text-gray-400 text-sm">bookmark</p>
+                                <p className="text-2xl font-bold text-white">{bookmark.length}</p>
                             </div>
+
                         </div>
                     </div>
-                    <div className="bg-gray-800 border border-gray-700 rounded-xl  p-2 lg:p-6">
+                    <div className="bg-gray-800 border border-gray-700 rounded-xl p-2 lg:p-6" onClick={() => setactivetab('history')}>
                         <div className="flex items-center space-x-3">
-                            <div className="p-3 bg-cyan-500/20 rounded-lg">
-                                <MessageCircle className="w-6 h-6 text-cyan-400" />
+                            <div className="p-3 bg-blue-500/20 rounded-lg">
+                                <User className="w-6 h-6 text-blue-400" />
                             </div>
                             <div>
-                                <p className="text-gray-400 text-sm">Total Comments</p>
-                                <p className="text-2xl font-bold text-white">{projects.reduce((sum, p) => sum + p.comments, 0)}</p>
+                                <p className="text-gray-400 text-sm">history</p>
+                                <p className="text-2xl font-bold text-white">{history.length}</p>
                             </div>
+
                         </div>
-                    </div> */}
+                    </div>
                 </div>
             </div>
 
             {/* Projects Grid */}
-            <div className="mb-6">
+            
+           {
+            activetab!=='history'? <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold text-white">Your Projects</h2>
                     <span className="text-gray-400">{filteredProjects.length} projects found</span>
@@ -201,22 +264,51 @@ const Dashboard = () => {
                             <p className="text-gray-400 mb-4">
                                 {searchTerm ? 'Try adjusting your search terms' : 'Create your first project to get started'}
                             </p>
-                            <NavLink
-                                to={'/add-project'}
-                                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300"
-                            >
-                                Create Project
-                            </NavLink>
+                            {
+                                filter == 'all' ?
+                                    <NavLink
+                                        to={'/add-project'}
+                                        className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300"
+                                    >
+                                        Create Project
+                                    </NavLink> : null
+
+                            }
                         </div>
-                    ) :
+                    )
+                        :
                         (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filteredProjects.map((project) => (
-                                    <ProjectCard key={project.id} project={project} />
-                                ))}
+
+                                {
+                                    activetab == 'myproject' ? (
+                                        filteredProjects.map((project) => (
+                                            <MyProjectCard key={project.id} project={project} />
+                                        ))
+                                    ) : ''
+                                }
+                                {
+                                    activetab == 'bought' ? (
+                                        filteredProjects.map((project) => <ProjectCard key={project.project_id} project={project} unlock={true} />)
+                                    ) : ''
+                                }
+                                {
+                                    activetab == 'bookmark' ? (
+                                        filteredProjects.map((project) => <ProjectCard key={project.project_id} project={project} />)
+                                    ) : ''
+                                }
+                                
                             </div>
-                        )}
-            </div>
+                        )
+                }
+            </div>:null
+           }
+
+            {
+                                    activetab == 'history' ? <History history={history}/> : ''
+                                }
+
+
         </div>
     )
 }
