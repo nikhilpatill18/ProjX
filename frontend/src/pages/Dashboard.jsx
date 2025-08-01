@@ -117,11 +117,11 @@ const Dashboard = () => {
                         <p className="text-gray-400">Manage and track your projects</p>
                     </div>
                     <NavLink
-                        to={'/add-project'}
+                        to={`http://127.0.0.1:5000/api/auth/github/login?idtoken=${idtoken}`}
                         className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105"
                     >
                         <Plus className="w-5 h-5" />
-                        <span>New Project</span>
+                        <span>verifygithub</span>
                     </NavLink>
                 </div>
 

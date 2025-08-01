@@ -16,7 +16,7 @@ from models.Project import Project
 
 cred=credentials.Certificate('servicekey.json')
 firebase_admin.initialize_app(cred)
-auth_user=Blueprint('/api/auth',__name__)
+auth_user=Blueprint('auth_user',__name__,url_prefix='/api/auth')
 
 bcrypt=Bcrypt()
 
@@ -51,7 +51,6 @@ def firebaseAuthmiddleware(f):
     @wraps(f)
     def decorated(*args,**kwargs):
         token=request.headers.get('Authorization','').replace('Bearer ','')
-        print(token)
         if not token:
             return jsonify({'message':'Missing token'}),401
         try:
@@ -62,7 +61,6 @@ def firebaseAuthmiddleware(f):
             if not user:
                 return jsonify({'message': 'User profile not found'}), 404
             request.user=user
-            print(user)
         except Exception as e:
             print(e)
             return jsonify({'message': 'Invalid or expired token'}), 401
@@ -281,23 +279,27 @@ def searchUser():
 
 # github login
 
-@auth_user.route('github/login')
-# @authMiddleware
+@auth_user.route('/github/login')
 def  github_login():
+    print("helllllllllllllllllllllllllllll")
+    userId=request.args.get('idtoken')
     github_client_id=current_app.config['GITHUB_CLIENT_ID']
-    redirect_uri=url_for('/auth.github_callback',_external=True)
+    redirect_uri=url_for('auth_user.github_callback',_external=True)
     github_auth_url = (
         f"https://github.com/login/oauth/authorize"
         f"?client_id={github_client_id}"
         f"&redirect_uri={redirect_uri}"
         f"&scope=read:user"
     )
-    return redirect(github_auth_url)
+    print("hello")
+    # print(github_auth_url)
+    response=redirect(github_auth_url)
+    response.set_cookie('idtoken',userId,httponly=True,secure=False,max_age=3000)
+    return response
 
 #route where the girhub redirect
 
-@auth_user.route('github/callback')
-# @authMiddleware
+@auth_user.route('/github/callback')
 def github_callback():
     code=request.args.get('code')
     if not code :
@@ -325,12 +327,12 @@ def github_callback():
 
     # Now update user in DB (dummy example, you need to know who is logged in)
     # For example, you might use session['user_id'] or JWT
-    user_id = request.user.user_id
+    user_id = firebase_auth.verify_id_token(request.cookies.get('idtoken'))['uid']
     if not user_id:
         return jsonify({'error': 'User not logged in'}), 401
 
-    from models.users import User, db
-    user = User.query.get(user_id)
+    from models.users import Users, db
+    user = Users.query.filter_by(firebase_uid=user_id).first()
     if user:
         user.github_username = github_username
         user.github_verified = True
@@ -338,4 +340,4 @@ def github_callback():
     print('github login verify sussfully')
 
     # Redirect user back to frontend profile page
-    return redirect("http://localhost:3000/profile?github=verified")
+    return redirect("http://localhost:5173/dashboard")

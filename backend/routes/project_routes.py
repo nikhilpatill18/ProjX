@@ -130,7 +130,7 @@ def anaylze_repo():
                jsonify({'message':'Please enter the url'}),404
         print(repo_url.rstrip('/').split('/'))
         repo_name=repo_url.rstrip('/').split('/')[-1]
-        repo_api_url=f"https://api.github.com/repos/{'nikhilpatill18'}/{repo_name}"
+        repo_api_url=f"https://api.github.com/repos/{user.github_username}/{repo_name}"
         repo_response=requests.get(repo_api_url)
         print(repo_response)
         if(repo_response.status_code!=200):
