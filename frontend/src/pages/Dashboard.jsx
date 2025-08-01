@@ -19,28 +19,24 @@ import History from '../components/History'
 
 const Dashboard = () => {
     const { idtoken, userprofile } = useContext(AuthContext)
-    // console.log(idtoken);
-    console.log(useSelector((state) => state.projects));
-
-    const { bookmark } = useSelector((state) => state.projects)
+    let { bookmark,loading,buyedProject } = useSelector((state) => state.projects)
     const [myproject,setmyproject]=useState([])
     const [projects, setProjects] = useState([])
     const [filteredProjects, setFilteredProjects] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
-    const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState('all') // all, recent, popular
     const [showDropdown, setShowDropdown] = useState(null)
     const [buyedproject, setbuyedproject] = useState([])
     const [activetab, setactivetab] = useState('myproject')
     const [history,sethistory]=useState([])
     useEffect(() => {
+        
         fetchProjects()
-        getBuyedproject()
         fetchHistoy()
     }, [idtoken])
 
     const fetchProjects = async () => {
-        setLoading(true)
+        // setLoading(true)
         try {
             const response = await axios.get('http://127.0.0.1:5000/api/projects/userprojects', { headers: { 'Authorization': `Bearer ${idtoken}` } })
             console.log(response.data.data);
@@ -49,30 +45,11 @@ const Dashboard = () => {
             setFilteredProjects(response.data.data || [])
         } catch (error) {
             console.error('Failed to fetch projects:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
-    const getBuyedproject = async () => {
-        // setLoading(true)
-        try {
-            const response = await axios.get('http://127.0.0.1:5000/api/projects/buyed-project', {
-                headers: {
-                    'Authorization': `Bearer ${idtoken}`
-                }
-            })
-            setbuyedproject(response.data.data)
-        }
-        catch (error) {
-            console.log(error);
-
-        }
+        } 
     }
     const fetchHistoy= async()=>{
         try {
             const response = await axios.get('http://127.0.0.1:5000/api/payment/gethistory', { headers: { 'Authorization': `Bearer ${idtoken}` } })
-            console.log(response);
-            
             if(response.status==200){
                 sethistory(response.data.data)
             }
@@ -111,10 +88,11 @@ const Dashboard = () => {
 
         }
         else if (activetab == 'bought') {
-            setProjects(buyedproject)
-            setFilteredProjects(buyedproject)
+            setProjects(buyedProject)
+            setFilteredProjects(buyedProject)
         }
         else if (activetab == 'bookmark') {
+            console.log(bookmark);
             setProjects(bookmark)
             setFilteredProjects(bookmark)
         }
@@ -127,7 +105,7 @@ const Dashboard = () => {
 
     useEffect(() => {
         handletabChange()
-    }, [activetab])
+    }, [activetab,bookmark,buyedProject])
 
     return (
         <div className="min-h-screen bg-gray-900 p-6">
@@ -138,13 +116,13 @@ const Dashboard = () => {
                         <h1 className="text-3xl font-bold text-white mb-2">Welcome Back, {userprofile.username}</h1>
                         <p className="text-gray-400">Manage and track your projects</p>
                     </div>
-                    <button
-                        onClick={() => window.location.href = '/add-project'}
+                    <NavLink
+                        to={'/add-project'}
                         className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105"
                     >
                         <Plus className="w-5 h-5" />
                         <span>New Project</span>
-                    </button>
+                    </NavLink>
                 </div>
 
                 {/* Search and Filter Bar */}
@@ -197,7 +175,7 @@ const Dashboard = () => {
                             </div>
                             <div>
                                 <p className="text-gray-400 text-sm">Bought</p>
-                                <p className="text-2xl font-bold text-white">{buyedproject.length}</p>
+                                <p className="text-2xl font-bold text-white">{buyedProject.length}</p>
                             </div>
 
                         </div>

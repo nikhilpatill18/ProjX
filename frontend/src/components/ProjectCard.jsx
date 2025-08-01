@@ -37,8 +37,6 @@ const ProjectCard = ({ project, unlock = false }) => {
     const { idtoken } = useContext(AuthContext)
     const [selectedProject, setSelectedProject] = useState(null)
     const [isBookmarked, setIsBookmarked] = useState(project.bookedmarked)
-    console.log(project.bookedmarked);
-
     const [isLiked, setIsLiked] = useState(false)
 
 
@@ -67,8 +65,7 @@ const ProjectCard = ({ project, unlock = false }) => {
 
     const handleBookmark = async () => {
         if (!isBookmarked) {   // runs when the project is not bookmark
-            try {
-
+            try {                
                 const response = await axios.get(`http://127.0.0.1:5000/api/bookmark/${project.project_id}`, {
                     headers: {
                         'Authorization': `Bearer ${idtoken}`
@@ -77,8 +74,9 @@ const ProjectCard = ({ project, unlock = false }) => {
                 console.log(response);
 
                 if (response.status == 200) {
+                    setIsBookmarked(prev=>!prev)
+                    console.log(isBookmarked,'bookedmarked');
                     dispatch(addbookmark(project.project_id))
-                    setIsBookmarked(!isBookmarked)
                 }
                 else {
                     toast.warn('Bookmark Not Added')
@@ -90,15 +88,16 @@ const ProjectCard = ({ project, unlock = false }) => {
         }
         else {   // run when to remove the bookmark project
             try {
-
+                
+                
                 const response = await axios.delete(`http://127.0.0.1:5000/api/bookmark/${project.project_id}`, {
                     headers: {
                         'Authorization': `Bearer ${idtoken}`
                     }
                 })
                 if (response.status == 200) {
+                    setIsBookmarked(prev=>!prev)
                     dispatch(removebookmarked(project.project_id))
-                    setIsBookmarked(!isBookmarked)
                 }
                 else {
                     toast.warn('Bookmark Not Added')

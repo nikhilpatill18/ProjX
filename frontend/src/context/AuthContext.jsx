@@ -5,6 +5,7 @@ import axios from 'axios'
 import { onAuthStateChanged, getIdToken } from 'firebase/auth'
 import { useDispatch } from 'react-redux'
 import { getProjects } from '../store/projectSlice.js'
+import { getBuyedproject } from '../store/projectSlice.js'
 
 const AuthContext = createContext()
 // export const useAuth = () => useContext(AuthContext)
@@ -31,6 +32,7 @@ export const AuthProvider = ({ children }) => {
                     setUserprofile(response.data.data)
                     setFirebaseuser(response.data.data)
                     dispatch(getProjects())
+                    dispatch(getBuyedproject())
                 } catch (error) {
                     console.log(error);
                     setUserprofile(null)

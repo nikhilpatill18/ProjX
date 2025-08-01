@@ -5,7 +5,8 @@ import { useContext } from 'react'
 const initialState = {
     projects: [],
     bookmark: [],
-    loading: false
+    buyedProject:[],
+    loading: false, 
 }
 
 const productslice = createSlice({
@@ -31,6 +32,12 @@ const productslice = createSlice({
                 }
                 return project
             })
+            state.buyedProject = state.buyedProject.filter((project) => {
+                if (project.project_id == action.payload) {
+                    project.bookedmarked = true
+                }
+                return project
+            })
 
         },
         removebookmarked(state, action) {
@@ -39,8 +46,17 @@ const productslice = createSlice({
                     project.bookedmarked = false
                     state.bookmark = state.bookmark.filter(project => project.project_id != action.payload)
                 }
+                return project
 
             })
+            state.buyedProject.filter((project) => {
+                if (project.project_id == action.payload) {
+                    project.bookedmarked = false
+                }
+                return project
+
+            })
+            
 
         },
         updateStatus(state, action) {
@@ -50,11 +66,14 @@ const productslice = createSlice({
                 }
                 return project
             })
+        },
+        addBuyedProject(state,action){
+            state.buyedProject=action.payload
         }
     }
 })
 
-export const { setProjects, setloading, clearloading, updateStatus, removebookmarked, addbookmark } = productslice.actions
+export const { setProjects, setloading, clearloading, updateStatus, removebookmarked, addbookmark,addBuyedProject } = productslice.actions
 export default productslice.reducer
 
 
@@ -84,6 +103,23 @@ export function UpdateProjectStatus(projectId) {
         });
         if (response.status == 200) {
             dispatch(updateStatus(projectId))
+        }
+        else {
+            console.log('failed to update the state');
+
+        }
+
+    }
+}
+export function getBuyedproject() {
+    return async function getBuyedprojectStatusThunk(dispatch, getstate) {
+            const response = await axios.get('http://127.0.0.1:5000/api/projects/buyed-project', {
+                headers: {
+                    'Authorization': `Bearer ${idtoken}`
+                }
+            })
+        if (response.status == 200) {
+            dispatch(addBuyedProject(response.data.data))
         }
         else {
             console.log('failed to update the state');
