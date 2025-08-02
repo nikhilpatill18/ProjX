@@ -126,13 +126,13 @@ def anaylze_repo():
         # print(user.github_username)
         print(request.get_json())
         repo_url=request.get_json()['repo_url']
-        if not repo_url:
+        if len(repo_url)==0:
                jsonify({'message':'Please enter the url'}),404
         print(repo_url.rstrip('/').split('/'))
         repo_name=repo_url.rstrip('/').split('/')[-1]
         repo_api_url=f"https://api.github.com/repos/{user.github_username}/{repo_name}"
         repo_response=requests.get(repo_api_url)
-        print(repo_response)
+        print(repo_response.status_code)
         if(repo_response.status_code!=200):
                return jsonify({'message':'repo not exits'}),404
         #   get readme file
@@ -178,7 +178,7 @@ def add_project():
             existed_project=SoftwareProject.query.filter_by(repo_url=repo_url).first()
             if existed_project:
                 return jsonify({'message':'Project Already registed'})
-            project=Project(title=title,description =description,price=price,complexity=complexity,duration_hours=duration_hours,user_id=userID,category_id=cat_id,subject=subject,status='available')
+            project=Project(title=title,description =description,price=price,complexity=complexity,duration_hours=duration_hours,user_id=userID,category_id=cat_id,subject=subject,status='available',is_verified=False if is_verified=='False' else True)
             db.session.add(project)
             db.session.flush()
             # upload the images to the cloudiniary and data base

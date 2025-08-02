@@ -29,6 +29,7 @@ class Project(db.Model):
 
     software = db.relationship('SoftwareProject', backref='project', uselist=False, cascade='all, delete-orphan',)
     hardware = db.relationship('HardwareProject', backref='project', uselist=False, cascade='all, delete-orphan',)
+    payment=db.relationship('Payment',backref="project",lazy=True,cascade='all, delete-orphan')
 
 
 class SoftwareProject(db.Model):

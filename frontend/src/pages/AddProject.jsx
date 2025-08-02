@@ -21,7 +21,8 @@ import {
     DollarSign,
     Clock,
     Layers,
-    AArrowDown
+    AArrowDown,
+    IndianRupee
 } from 'lucide-react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import axios from 'axios'
@@ -41,7 +42,7 @@ const AddProject = () => {
     const [formData, setFormData] = useState({
         title: '',
         description: '',
-        duration_hour: '',
+        duration_hours: '',
         complexity: '',
         price: '',
         repo_url: '',
@@ -87,7 +88,7 @@ const AddProject = () => {
             formdata.append('description', formData.description)
             formdata.append('price', formData.price)
             formdata.append('complexity', formData.complexity)
-            formdata.append('duration_hour', formData.duration_hour)
+            formdata.append('duration_hours', formData.duration_hours)
             formdata.append('subject', formData.subject)
             formdata.append('category', category)
             formdata.append('tech_stack', formData.tech_stack)
@@ -129,7 +130,7 @@ const AddProject = () => {
             formdata.append('description', formData.description)
             formdata.append('price', formData.price)
             formdata.append('complexity', formData.complexity)
-            formdata.append('duration_hour', formData.duration_hour)
+            formdata.append('duration_hour', formData.duration_hours)
             formdata.append('subject', formData.subject)
             formdata.append('category', category)
             formdata.append('is_verified', is_verified)
@@ -160,32 +161,43 @@ const AddProject = () => {
     }
 
     const verifySoftwareProject = async () => {
-        if (github_verified) {
-            setanalyze(true)
-            const response = await axios.post('http://127.0.0.1:5000/api/projects/anayze-repo', { 'repo_url': formData.repo_url }, {
-                headers: {
-                    "Content-Type": 'application/json',
-                    'Authorization': `Bearer ${idtoken}`
+        try {
+            if (github_verified) {
+                setanalyze(true)
+                const response = await axios.post('http://127.0.0.1:5000/api/projects/anayze-repo', { 'repo_url': formData.repo_url }, {
+                    headers: {
+                        "Content-Type": 'application/json',
+                        'Authorization': `Bearer ${idtoken}`
+                    }
+                })
+                console.log(response);
+                
+                if (response.status === 200) {
+                    setIsVerified(true)
+                    setanalyze(false)
+                    toast.success('Project verified')
                 }
-            })
-            if (response.status === 200) {
-                setIsVerified(true)
-                setanalyze(false)
-                toast.success('Project verified')
-            }
-            else if (response.status == 404) {
-                navigate('/signup')
-            }
-            else if (response.status == 401) {
-                navigate('/login')
+                else {
+                    setIsVerified(false)
+                    toast.error('Not able to Verify the Project')
+                }
             }
             else {
-                setIsVerified(false)
-                toast.error('Not able to Verify the Project')
+
+                toast.info('Please verify Your Github Acoount from Profile')
             }
-        }
-        else {
-            toast.info('Please verify Your Github Acoount from Profile')
+        } catch (error) {
+                setanalyze(false)
+                setIsVerified(false)
+                console.log(error.response)
+                if(error.response){
+                    const status=error.response.status;
+                    const message=error.response.data.message;
+                    toast.error(message)
+                }
+                else{
+                    toast.error('Failed to verify the project')
+                }
         }
 
         // Add verification logic here
@@ -329,8 +341,8 @@ const AddProject = () => {
                                 </label>
                                 <input
                                     type="number"
-                                    name="duration_hour"
-                                    value={formData.duration_hour}
+                                    name="duration_hours"
+                                    value={formData.duration_hours}
                                     onChange={handleInputChange}
                                     placeholder="e.g., 40"
                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
@@ -348,16 +360,16 @@ const AddProject = () => {
                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
                                 >
                                     <option value="">Select complexity</option>
-                                    <option value="Beginner">Beginner</option>
-                                    <option value="Intermediate">Intermediate</option>
-                                    <option value="Advanced">Advanced</option>
-                                    <option value="Expert">Expert</option>
+                                    <option value="High">High</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Low">Low</option>
+                                    {/* <option value="Expert">Expert</option> */}
                                 </select>
                             </div>
                             <div>
                                 <label className="block text-white font-medium mb-2 flex items-center space-x-2">
-                                    <DollarSign className="w-4 h-4" />
-                                    <span>Price ($)</span>
+                                    <IndianRupee className="w-4 h-4" />
+                                    <span>Price </span>
                                 </label>
                                 <input
                                     type="number"
@@ -533,7 +545,7 @@ const AddProject = () => {
                         <div className="flex justify-center pt-6">
                             <button
                                 onClick={category === 'SOFTWARE' ? handleSoftware : handleHardware}
-                                disabled={is_verified}
+                                disabled={!is_verified}
                                 className={`
                                     px-8 py-3 ${is_verified ? 'bg-gradient-to-r from-blue-500 to-cyan-500' : 'bg-gradient-to-r from-blue-300 to-cyan-300'} 
                                      text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2

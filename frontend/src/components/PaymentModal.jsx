@@ -41,7 +41,7 @@ import { useDispatch } from 'react-redux';
 import { UpdateProjectStatus } from '../store/projectSlice';
 
 
-const PaymentModal = ({ project, setShowPayment, setunlockdeatils,  }) => {
+const PaymentModal = ({ project, setShowPayment, setUnlockDetails,  }) => {
     const dispatch = useDispatch()
     const [upiId, setUpiId] = useState()
     const { idtoken } = useContext(AuthContext)
@@ -85,7 +85,7 @@ const PaymentModal = ({ project, setShowPayment, setunlockdeatils,  }) => {
                 });
                 dispatch(updateStatus(project.project_id))
                 dispatch(UpdateProjectStatus(project.project_id))
-                setunlockdeatils(true)
+                setUnlockDetails(true)
                 setShowPayment(false)
             }
             else {
@@ -93,7 +93,7 @@ const PaymentModal = ({ project, setShowPayment, setunlockdeatils,  }) => {
             }
 
         } catch (error) {
-            console.log("errror");
+            console.log(error);
 
 
         }

@@ -258,9 +258,9 @@ const ProjectDetailsModal = ({ project, onClose, handlebookmark, isBookmarked, u
                                 {/* Purchase Card */}
                                 <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 sticky top-6">
                                     <div className="text-center mb-6">
-                                        <div className="flex items-center justify-center space-x-2 mb-2">
-                                            <IndianRupee className="w-8 h-8 text-green-400" />
-                                            <span className="text-4xl font-bold text-white">₹{project.price}</span>
+                                        <div className="flex items-center justify-center space-x-2 mb-2 ">
+                                            <IndianRupee className="w-7 h-7 text-green-400" />
+                                            <span className="text-4xl font-bold text-white">{project.price}</span>
                                         </div>
                                         <p className="text-gray-400">One-time purchase</p>
                                     </div>
@@ -282,14 +282,13 @@ const ProjectDetailsModal = ({ project, onClose, handlebookmark, isBookmarked, u
                                             <div className="space-y-3">
                                                 {project.Project_data && (
                                                     <a
-                                                        href={project.Project_data.repo_rul}
+                                                        href={`${project.Project_data.repo_url}/archive/refs/heads/main.zip`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center space-x-2"
                                                     >
-                                                        <Play className="w-4 h-4" />
-                                                        <span>Live Demo</span>
-                                                        <ExternalLink className="w-4 h-4" />
+                                                        
+                                                        <span>Download Zip</span>
                                                     </a>
                                                 )}
                                                 {project.Project_data?.repo_url && (
