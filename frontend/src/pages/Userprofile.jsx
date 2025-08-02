@@ -14,8 +14,10 @@ import {
     AlertCircle,
     Settings,
     MapPin,
-
-    Briefcase
+    Briefcase,
+    DollarSign,
+    ShoppingCart,
+    IndianRupee
 } from 'lucide-react'
 import axios from 'axios'
 
@@ -23,57 +25,10 @@ const UserProfile = () => {
     const { idtoken, userprofile } = useContext(AuthContext)
 
     const [userProfile, setUserProfile] = useState(userprofile)
-
     const [isEditing, setIsEditing] = useState(false)
     const [editForm, setEditForm] = useState({})
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState(false)
     const [saving, setSaving] = useState(false)
-    const [profileStats, setProfileStats] = useState({
-        totalProjects: 0,
-        buyedProjects: 0
-    })
-
-    useEffect(() => {
-        fetchUserProfile()
-        fetchUserStats()
-    }, [idtoken])
-
-    const fetchUserProfile = async () => {
-        setLoading(true)
-        try {
-            // Replace with your actual API endpoint
-            const response = await axios.get('http://127.0.0.1:5000/api/user/profile', {
-                headers: { 'Authorization': `Bearer ${idtoken}` }
-            })
-            setUserProfile(response.data.data)
-            setEditForm(response.data.data)
-        } catch (error) {
-            console.error('Failed to fetch user profile:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const fetchUserStats = async () => {
-        try {
-            // Fetch user's projects
-            const projectsResponse = await axios.get('http://127.0.0.1:5000/api/projects/userprojects', {
-                headers: { 'Authorization': `Bearer ${idtoken}` }
-            })
-
-            // Fetch user's bought projects
-            const buyedResponse = await axios.get('http://127.0.0.1:5000/api/projects/buyed-project', {
-                headers: { 'Authorization': `Bearer ${idtoken}` }
-            })
-
-            setProfileStats({
-                totalProjects: projectsResponse.data.data?.length || 0,
-                buyedProjects: buyedResponse.data.data?.length || 0
-            })
-        } catch (error) {
-            console.error('Failed to fetch user stats:', error)
-        }
-    }
 
     const handleEditToggle = () => {
         if (isEditing) {
@@ -92,27 +47,36 @@ const UserProfile = () => {
     const handleSaveProfile = async () => {
         setSaving(true)
         try {
-            const response = await axios.put('http://127.0.0.1:5000/api/user/profile', editForm, {
+            // Map form data back to API expected format
+            const updateData = {
+                full_name: editForm.full_name,
+                username: editForm.username,
+                github_username: editForm.github_username
+            }
+            
+            const response = await axios.put('http://127.0.0.1:5000/api/user/profile', updateData, {
                 headers: {
                     'Authorization': `Bearer ${idtoken}`,
                     'Content-Type': 'application/json'
                 }
             })
-            setUserProfile(response.data.data)
+            
+            // Update userProfile with the response data
+            const updatedProfile = {
+                ...userProfile,
+                full_name: response.data.data.fullname,
+                username: response.data.data.username,
+                github_username: response.data.data.github_username,
+                github_verified: response.data.data.github_verified
+            }
+            
+            setUserProfile(updatedProfile)
             setIsEditing(false)
         } catch (error) {
             console.error('Failed to update profile:', error)
         } finally {
             setSaving(false)
         }
-    }
-
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        })
     }
 
     if (loading) {
@@ -200,7 +164,7 @@ const UserProfile = () => {
                                             </div>
                                             <div className="flex items-center space-x-1">
                                                 <Calendar className="w-4 h-4" />
-                                                <span>Joined {formatDate(userProfile.created_at)}</span>
+                                                <span>Joined {new Date(userProfile.created_at).toLocaleDateString()}</span>
                                             </div>
                                         </div>
                                     </>
@@ -260,15 +224,15 @@ const UserProfile = () => {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
                         <div className="flex items-center space-x-3">
                             <div className="p-3 bg-blue-500/20 rounded-lg">
                                 <Briefcase className="w-6 h-6 text-blue-400" />
                             </div>
                             <div>
-                                <p className="text-gray-400 text-sm">Total Projects</p>
-                                <p className="text-2xl font-bold text-white">{profileStats.totalProjects}</p>
+                                <p className="text-gray-400 text-sm">Projects Sold</p>
+                                <p className="text-2xl font-bold text-white">{userProfile.soldProject || 0}</p>
                             </div>
                         </div>
                     </div>
@@ -276,11 +240,23 @@ const UserProfile = () => {
                     <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
                         <div className="flex items-center space-x-3">
                             <div className="p-3 bg-green-500/20 rounded-lg">
-                                <CheckCircle className="w-6 h-6 text-green-400" />
+                                <ShoppingCart className="w-6 h-6 text-green-400" />
                             </div>
                             <div>
-                                <p className="text-gray-400 text-sm">Purchased Projects</p>
-                                <p className="text-2xl font-bold text-white">{profileStats.buyedProjects}</p>
+                                <p className="text-gray-400 text-sm">Projects Purchased</p>
+                                <p className="text-2xl font-bold text-white">{userProfile.buyedProject || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
+                        <div className="flex items-center space-x-3">
+                            <div className="p-3 bg-yellow-500/20 rounded-lg">
+                                <IndianRupee className="w-6 h-6 text-yellow-400" />
+                            </div>
+                            <div>
+                                <p className="text-gray-400 text-sm">Total Sales</p>
+                                <p className="text-2xl font-bold text-white">{userProfile.total_sale}</p>
                             </div>
                         </div>
                     </div>
@@ -294,6 +270,13 @@ const UserProfile = () => {
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-400 mb-2">Full Name</label>
+                            <div className="bg-gray-700 rounded-lg px-3 py-2 text-gray-300">
+                                {userProfile.fullname || 'Not provided'}
+                            </div>
+                        </div>
+
                         <div>
                             <label className="block text-sm font-medium text-gray-400 mb-2">Username</label>
                             <div className="bg-gray-700 rounded-lg px-3 py-2 text-gray-300">
@@ -311,12 +294,12 @@ const UserProfile = () => {
                         <div>
                             <label className="block text-sm font-medium text-gray-400 mb-2">Account Created</label>
                             <div className="bg-gray-700 rounded-lg px-3 py-2 text-gray-300">
-                                {formatDate(userProfile.created_at)}
+                                {new Date(userProfile.created_at).toLocaleDateString()}
                             </div>
                         </div>
 
                         {userProfile.github_username && (
-                            <div>
+                            <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-400 mb-2">GitHub Username</label>
                                 <div className="bg-gray-700 rounded-lg px-3 py-2 text-gray-300 flex items-center space-x-2">
                                     <Github className="w-4 h-4" />

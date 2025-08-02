@@ -12,6 +12,7 @@ import firebase_admin
 from firebase_admin import credentials,auth as firebase_auth
 from models.payment import Payment
 from models.Project import Project
+from sqlalchemy import func
 
 
 cred=credentials.Certificate('servicekey.json')
@@ -155,7 +156,12 @@ def register():
 def me():
     try:
         user=request.user
-        # print(user.user_id)
+        buyedProject=Payment.query.filter_by(buyer_id=user.user_id).count()
+        soldProject=db.session.query(Project,Payment).join(Project,Project.id==Payment.project_id).filter(Project.user_id==user.user_id).count()
+        total_paymentreceived=db.session.query(func.sum(Payment.amount)).join(Project,Project.id==Payment.project_id).filter(Payment.status=='succeeded',Project.user_id==user.user_id).scalar()
+        # print(total_paymentreceived/100)
+        print(buyedProject,'buyedproject')
+        print(soldProject,'soldproject')
         return jsonify({'message':'success','data':{
             'user_id':user.user_id,
             'firebase_uid':user.firebase_uid,
@@ -164,7 +170,12 @@ def me():
             'username':user.username,
             'profile_photo':user.profile_photo,
             'github_username':user.github_username,
-            'github_verified':user.github_verified
+            'github_verified':user.github_verified,
+            'buyedProject':buyedProject,
+            'soldProject':soldProject,
+            'total_sale':0 if not total_paymentreceived else total_paymentreceived/100,
+            'created_at':user.created_at
+
         }}),200
     except  Exception as e:
         print(e)
