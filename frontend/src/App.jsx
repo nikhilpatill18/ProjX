@@ -14,6 +14,7 @@ import MyProjectPage from './pages/MyProjectPage.jsx'
 import ProjectDetailsModal from './components/ProjectDetailsModal.jsx'
 import { Provider } from 'react-redux'
 import store from './store/Store.js'
+import VerifyEmail from './pages/VerifyEmail.jsx'
 const App = () => {
   return (
     <div>
@@ -31,6 +32,7 @@ const App = () => {
               <Route path='/add-project' element={<Protectedroute><AddProject /></Protectedroute>} />
               <Route path='/your-project' element={<Protectedroute><Projects /></Protectedroute>} />
               <Route path='/projects/:projectId' element={<Protectedroute><MyProjectPage /></Protectedroute>} />
+              <Route path='verify-email' element={<VerifyEmail/>}/>
 
             </Routes>
           </Router>

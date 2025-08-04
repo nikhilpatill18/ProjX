@@ -1,23 +1,37 @@
-import React from 'react'
-// import { useAuth } from '../context/AuthContext'
+import React, { useEffect, useState } from 'react'
 import { AuthContext } from '../context/AuthContext'
-import { Navigate } from 'react-router-dom'
+import { useNavigate,Navigate } from 'react-router-dom'
 import { useContext } from 'react'
 import Sidebar from './Sidebar'
 import { ToastContainer } from 'react-toastify'
+import { auth } from '../libs/Firebase'
+
+import { onAuthStateChanged } from 'firebase/auth'
 const Protectedroute = ({ children }) => {
+    const navigate=useNavigate()
     const { firebaseuser, userprofile, loading } = useContext(AuthContext)
-    console.log(loading);
+    const[isAllowed,setisAllowed]=useState(false)
+    useEffect(()=>{
+       const unsubscribe = onAuthStateChanged(auth,async (user) => {
+        console.log(user.emailVerified);
+        
+        if (user) {
+        //   await user.reload(); // Make sure we get the latest status
+          if (user.emailVerified) {            
+            setisAllowed(true);
+          } else {
+            setisAllowed(false);
+          }
+        }
+         // Done checking
+      });
 
+      return () => unsubscribe();
 
-
-
-
-
+    },[])
     if (loading) return <div>loading...</div>
-
     if (!firebaseuser) return <Navigate to={'/login'} />
-
+    if(!isAllowed)return <Navigate to={'/verify-email'} />
     return (
         <div className='flex h-screen '>
             <ToastContainer />

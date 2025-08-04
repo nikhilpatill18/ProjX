@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { Upload, Mail, Lock, User, UserCheck, Eye, EyeOff, Chrome } from 'lucide-react'
 import { auth } from '../libs/Firebase.js'
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from 'firebase/auth'
 import axios from 'axios'
+import {useNavigate} from 'react-router-dom'
+import { toast } from 'react-toastify'
 
-
+    
 // google signin funcality is left
 const Signup = () => {
     const [form, setForm] = useState({ email: '', password: '', username: '', full_name: '' })
@@ -14,6 +16,7 @@ const Signup = () => {
     const [showPassword, setShowPassword] = useState(false)
     const [usernames, setUsernames] = useState([])
     const [isUsernameAvailable, setIsUsernameAvailable] = useState(true)
+    const navigate=useNavigate()
 
 
     // to fetch all the username
@@ -69,6 +72,7 @@ const Signup = () => {
 
             if (response.status === 200) {
                 console.log('User created successfully')
+                navigate('/dashboard')
             } else {
                 await userCred.user.delete()
                 console.error('Backend failed, user deleted from Firebase')
@@ -87,25 +91,29 @@ const Signup = () => {
         try {
             userCred = await createUserWithEmailAndPassword(auth, form.email, form.password)
             const idToken = await userCred.user.getIdToken()
-
+            console.log(idToken);
+            localStorage.setItem('idtoken',idToken)
             const formData = new FormData()
             formData.append('username', form.username)
             formData.append('full_name', form.full_name)
             formData.append('profile_photo', profilePhoto)
+            sendEmailVerification(auth.currentUser).then(()=>toast.info('check your mail to verify the email address')).catch((err)=>console.log(err)
+            )
 
             const response = await axios.post('http://127.0.0.1:5000/api/auth/register', formData, {
-                headers: { Authorization: `Bearer ${idToken}` }
+                headers: { 'Authorization': `Bearer ${idToken}` }
             })
 
             if (response.status === 200) {
-                console.log('User created successfully')
+                navigate('/dashboard')
+                // console.log('User created successfully')
             } else {
                 await userCred.user.delete()
                 console.error('Backend failed, user deleted from Firebase')
             }
         } catch (error) {
             console.error('Registration error:', error)
-            if (userCred?.user) await userCred.user.delete()
+            if (userCred?.user) await userCred.user.delete(); localStorage.removeItem('idtoken')
         } finally {
             setLoading(false)
         }
@@ -249,7 +257,7 @@ const Signup = () => {
                     {/* Footer */}
                     <p className="text-center text-gray-400 text-sm mt-6">
                         Already have an account?{' '}
-                        <a href="#" className="text-blue-400 hover:text-blue-300 transition-colors font-medium">
+                        <a href="/login" className="text-blue-400 hover:text-blue-300 transition-colors font-medium">
                             Sign in
                         </a>
                     </p>

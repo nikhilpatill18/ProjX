@@ -19,6 +19,10 @@ export const AuthProvider = ({ children }) => {
     const dispatch = useDispatch()
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            console.log(user.emailVerified);
+            
+            console.log(user);
+            
             setFirebaseuser(user)
             if (user) {
                 // console.log(user);
