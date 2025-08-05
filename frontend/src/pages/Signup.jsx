@@ -60,19 +60,16 @@ const Signup = () => {
             const provider = new GoogleAuthProvider()
             userCred = await signInWithPopup(auth, provider)
             const idToken = await userCred.user.getIdToken()
-
-            const formData = new FormData()
-            formData.append('username', form.username)
-            formData.append('full_name', form.full_name)
-            formData.append('profile_photo', profilePhoto)
-
-            const response = await axios.post('http://127.0.0.1:5000/api/auth/register', formData, {
+            localStorage.setItem('idtoken',idToken)
+            const response = await axios.get('http://127.0.0.1:5000/api/auth/register', {
                 headers: { Authorization: `Bearer ${idToken}` }
             })
-
+            
             if (response.status === 200) {
+            sendEmailVerification(auth.currentUser).then(()=>toast.info('check your mail to verify the email address')).catch((err)=>console.log(err)
+            )
                 console.log('User created successfully')
-                navigate('/dashboard')
+                navigate('/complete-profile')
             } else {
                 await userCred.user.delete()
                 console.error('Backend failed, user deleted from Firebase')
@@ -91,22 +88,19 @@ const Signup = () => {
         try {
             userCred = await createUserWithEmailAndPassword(auth, form.email, form.password)
             const idToken = await userCred.user.getIdToken()
-            console.log(idToken);
             localStorage.setItem('idtoken',idToken)
-            const formData = new FormData()
-            formData.append('username', form.username)
-            formData.append('full_name', form.full_name)
-            formData.append('profile_photo', profilePhoto)
-            sendEmailVerification(auth.currentUser).then(()=>toast.info('check your mail to verify the email address')).catch((err)=>console.log(err)
-            )
+            
 
-            const response = await axios.post('http://127.0.0.1:5000/api/auth/register', formData, {
+            const response = await axios.get('http://127.0.0.1:5000/api/auth/register', {
                 headers: { 'Authorization': `Bearer ${idToken}` }
             })
+            console.log(response);
+            
 
             if (response.status === 200) {
-                navigate('/dashboard')
-                // console.log('User created successfully')
+                sendEmailVerification(auth.currentUser).then(()=>toast.info('check your mail to verify the email address')).catch((err)=>console.log(err)
+            )
+                navigate('/complete-profile')
             } else {
                 await userCred.user.delete()
                 console.error('Backend failed, user deleted from Firebase')
@@ -137,31 +131,6 @@ const Signup = () => {
                         <h2 className="text-3xl font-bold text-white mb-2">Create Account</h2>
                         <p className="text-gray-400">Join us and start your journey</p>
                     </div>
-
-                    {/* Profile photo upload */}
-                    <div className="mb-6 flex justify-center">
-                        <div className="relative group">
-                            <div className="w-24 h-24 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 p-0.5 shadow-lg">
-                                <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center overflow-hidden group-hover:bg-gray-600 transition-colors">
-                                    {previewImage ? (
-                                        <img src={previewImage} alt="Preview" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <Upload className="w-8 h-8 text-gray-400 group-hover:text-gray-300" />
-                                    )}
-                                </div>
-                            </div>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleFileChange}
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            />
-                            <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
-                                <Upload className="w-3 h-3 text-white" />
-                            </div>
-                        </div>
-                    </div>
-
                     {/* Form fields */}
                     <div className="space-y-4">
                         {/* Email */}
@@ -193,31 +162,6 @@ const Signup = () => {
                             >
                                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                             </button>
-                        </div>
-
-                        {/* Username */}
-                        <div className="relative">
-                            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <input
-                                name="username"
-                                placeholder="Username"
-                                onChange={handleChange}
-                                className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                            />
-                            <p className={`text-sm ${isUsernameAvailable ? 'text-green-400' : 'text-red-400'} pl-2`}>
-                                {form.username && (isUsernameAvailable ? 'Username is available' : 'Username is taken')}
-                            </p>
-                        </div>
-
-                        {/* Full Name */}
-                        <div className="relative">
-                            <UserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <input
-                                name="full_name"
-                                placeholder="Full Name"
-                                onChange={handleChange}
-                                className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                            />
                         </div>
                     </div>
 

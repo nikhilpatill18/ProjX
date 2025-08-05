@@ -69,54 +69,15 @@ def firebaseAuthmiddleware(f):
     return decorated
 
 # register user controller
-@auth_user.route('/register',methods=['POST'])
+@auth_user.route('/register',methods=['GET'])
 def register():
     cloudinary.config(
     cloud_name= current_app.config['CLOUD_NAME'],
     api_key= current_app.config['CLOUD_API_KEY'],
     api_secret= current_app.config['CLOUD_API_SECRET']
 )
-    # username=request.form.get('username')
-    # email=request.form.get('email')
-    # password=request.form.get('password')
-    # full_name=request.form.get('username')
-    # file_upload=request.files.get('profile_photo')
-    # print(request.form)
-    # try:
-
-    #     if (not username or not email or not password or not full_name ):
-    #         respone=make_response(jsonify({'message':'All the Fields are compulsary'}),404)
-    #         return respone
-    #     print('hi')
-    #     # existing_user=Users.query.filter((Users.email==email)|(Users.username==username)).first()
-    #     # if(existing_user):
-    #     #     return jsonify({'message':'User already exits with same email or username'}),404
-    #     print('hello')
-    #     hash_pass=bcrypt.generate_password_hash(password).decode('utf-8')
-    #     if not file_upload:
-    #         return jsonify({'message':"profilePic is required"}) , 404
-    #     upload_result=cloudinary.uploader.upload(file_upload)
-    #     print(upload_result['url'])
-    #     user=Users(username=username,password=hash_pass,profile_photo=upload_result['url'],full_name=full_name,email=email)
-    #     db.session.add(user)
-    #     db.session.commit()
-    #     print(user)
-    #     token=jwt.encode({'user_id':user.user_id,'exp':datetime.datetime.utcnow()+datetime.timedelta(hours=1)},
-    #      current_app.config['SECRET_KEY'] ,algorithm='HS256'
-    #                      )
-    #     response=make_response(jsonify({'message':'user created successfull','data':{
-    #         'user_id':user.user_id,
-    #         'username':user.username,
-    #         'email':user.email,
-    #         'full_name':user.full_name,
-    #         'profile_photo':user.profile_photo
-    #     }}))
-    #     response.set_cookie('Access-token',token,httponly=True,secure=False)
-    #     return response
-    # except Exception :
-    #     print(Exception)
-    #     print('something error in register')
     token=request.headers.get('Authorization','').replace('Bearer ','')
+    print(token)
     try:
         decoded=firebase_auth.verify_id_token(token)
         firebase_uid=decoded['uid']
@@ -124,32 +85,51 @@ def register():
     except Exception as e:
         print(e)
         return jsonify({'message': 'Invalid token'}), 401
-    username=request.form.get('username')
-    full_name=request.form.get('full_name')
-    file_upload=request.files.get('profile_photo')
-    if not username or not full_name:
-        return jsonify({'message': 'username and full_name required'}), 400
-    # check if  the user already exits
-    existing_user=Users.query.filter_by(firebase_uid=firebase_uid).first()
-    if existing_user:
-        return jsonify({'message': 'Profile already exists'}), 400
-    profile_photo=None
-    if file_upload :
-        upload_result=cloudinary.uploader.upload(file_upload)
-        profile_photo=upload_result['url']
-    user=Users(firebase_uid=firebase_uid,username=username,full_name=full_name,profile_photo=profile_photo,email=email)
+    user=Users(firebase_uid=firebase_uid,email=email,IsprofileCompletd=False)
     db.session.add(user)
     db.session.commit()
-    print(user)
-    return jsonify({'message': 'Profile created successfully', 'data': {
-        'user_id': user.user_id,
-        'username': user.username,
-        'email': user.email,
-        'full_name': user.full_name,
-        'profile_photo': user.profile_photo
-    }}),200
+    return jsonify({'message':'user successfully register in database'}),200
 
 
+
+# complete profile route
+@auth_user.route('/complete-profile',methods=['POST'])
+def complete_profile():
+    cloudinary.config(
+    cloud_name= current_app.config['CLOUD_NAME'],
+    api_key= current_app.config['CLOUD_API_KEY'],
+    api_secret= current_app.config['CLOUD_API_SECRET'])
+    try:
+        token=request.headers.get('Authorization').replace('Bearer ','')
+        decodedToken=firebase_auth.verify_id_token(token)
+        firebase_uid=decodedToken['uid']
+        username=request.form.get('username')
+        full_name=request.form.get('full_name')
+        file_upload=request.files.get('profile_photo')
+        if not username or not full_name:
+            return jsonify({'message': 'username and full_name required'}), 400
+        profile_photo=None
+        if file_upload :
+            upload_result=cloudinary.uploader.upload(file_upload)
+            profile_photo=upload_result['url']
+        user=Users.query.filter_by(firebase_uid=firebase_uid).first()
+        print('heloooo')
+        print(user.user_id)
+        user.username=username
+        user.full_name=full_name
+        user.profile_photo=profile_photo
+        user.IsprofileCompletd=True
+        db.session.commit()
+        print('heloooo')
+        return jsonify({'message': 'Profile created successfully', 'data': {
+            'username': user.username,
+            'email': user.email,
+            'full_name': user.full_name,
+            'profile_photo': user.profile_photo
+        }}),200
+        # return jsonify({'message': 'Profile created successfully'}),200
+    except Exception as e:
+        print(e)
 
 @auth_user.route('/me')
 @firebaseAuthmiddleware
@@ -169,6 +149,7 @@ def me():
             'email':user.email,
             'username':user.username,
             'profile_photo':user.profile_photo,
+            'IsprofileCompletd':user.IsprofileCompletd,
             'github_username':user.github_username,
             'github_verified':user.github_verified,
             'buyedProject':buyedProject,

@@ -11,27 +11,30 @@ const Protectedroute = ({ children }) => {
     const navigate=useNavigate()
     const { firebaseuser, userprofile, loading } = useContext(AuthContext)
     const[isAllowed,setisAllowed]=useState(false)
+    const [checking, setChecking] = useState(true)
     useEffect(()=>{
        const unsubscribe = onAuthStateChanged(auth,async (user) => {
-        console.log(user.emailVerified);
-        
         if (user) {
-        //   await user.reload(); // Make sure we get the latest status
-          if (user.emailVerified) {            
+          await user.reload(); 
+          if (user.emailVerified) { 
             setisAllowed(true);
           } else {
+            console.log("Email is not verifed");
             setisAllowed(false);
           }
         }
+        setChecking(false)
          // Done checking
       });
 
       return () => unsubscribe();
 
     },[])
-    if (loading) return <div>loading...</div>
+    if (loading|| checking) return <div>loading...</div>
     if (!firebaseuser) return <Navigate to={'/login'} />
+    if(!userprofile.IsprofileCompletd) return <Navigate to={'/complete-profile'}/>
     if(!isAllowed)return <Navigate to={'/verify-email'} />
+    
     return (
         <div className='flex h-screen '>
             <ToastContainer />

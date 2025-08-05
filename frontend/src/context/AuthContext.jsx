@@ -19,14 +19,8 @@ export const AuthProvider = ({ children }) => {
     const dispatch = useDispatch()
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            console.log(user.emailVerified);
-            
-            console.log(user);
-            
             setFirebaseuser(user)
             if (user) {
-                // console.log(user);
-
                 try {
                     const tokenId = await getIdToken(user)
                     const response = await axios.get('http://127.0.0.1:5000/api/auth/me', { headers: { Authorization: `Bearer ${tokenId}` } })
@@ -34,7 +28,7 @@ export const AuthProvider = ({ children }) => {
                     localStorage.setItem('idtoken', tokenId)
                     setIdtoken(tokenId)
                     setUserprofile(response.data.data)
-                    setFirebaseuser(response.data.data)
+                    setFirebaseuser(user)
                     dispatch(getProjects())
                     dispatch(getBuyedproject())
                 } catch (error) {

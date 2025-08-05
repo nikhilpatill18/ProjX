@@ -18,7 +18,7 @@ from models.review import Review
 from models.users import Users
 from models.payment import Payment
 from models.projectImages import ProjectImage
-from models.Project import SoftwareProject
+from models.Project import SoftwareProject,HardwareProject
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -39,9 +39,14 @@ app.register_blueprint(payment_bp, url_prefix='/api/payment')
 
 # with app.app_context():
 #     # Delete all existing categories if needed
-    # db.session.query(Project).delete()
-    # db.session.query(SoftwareProject).delete()
-    # db.session.commit()
+#     db.session.query(Project).delete()
+#     db.session.query(SoftwareProject).delete()
+#     db.session.query(HardwareProject).delete()
+#     db.session.query(Category).delete()
+#     db.session.query(Bookmark).delete()
+#     db.session.query(Payment).delete()
+#     db.session.query(Users).delete()
+#     db.session.commit()
 
 #     # Manually insert categories with specific IDs
 #     category1 = Category(id=1, name="SOFTWARE")
@@ -50,7 +55,7 @@ app.register_blueprint(payment_bp, url_prefix='/api/payment')
 #     db.session.add_all([category1, category2])
 #     db.session.commit()
 
-    # print("✅ Categories inserted with specific IDs.")
+#     print("Categories inserted with specific IDs.")
 
 @app.route('/username', methods=['GET'])
 def usernames():

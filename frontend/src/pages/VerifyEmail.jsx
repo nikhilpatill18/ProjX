@@ -4,11 +4,13 @@ import { sendEmailVerification } from 'firebase/auth'
 import { toast } from 'react-toastify'
 import { Mail, RefreshCw, CheckCircle, ArrowLeft } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
+import { AuthContext } from '../context/AuthContext'
+import { useContext } from 'react'
 
 const VerifyEmail = () => {
     const [emailSent, setEmailSent] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
-
+    const {firebaseuser}=useContext(AuthContext)
     const resendVerifyEmail = async () => {
         setIsLoading(true)
         try {
@@ -38,7 +40,7 @@ const VerifyEmail = () => {
                             We've sent a verification email to:
                         </p>
                         <p className="text-blue-400 font-semibold mt-1 break-all">
-                            {auth.currentUser?.email}
+                            {firebaseuser?.email}
                         </p>
                     </div>
 
