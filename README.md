@@ -1,43 +1,40 @@
-# 📘 ProjX – Project Selling Platform for College Students
+# ProjX – College Project Marketplace
 
-**ProjX** is a full-stack web application that enables college students to **buy, sell, and showcase academic projects**. It provides a secure and streamlined platform for student developers to monetize their work and for buyers to access high-quality academic resources.
+**ProjX** is a full-stack web platform that allows college students to **buy and sell academic projects** securely. The platform is designed to ensure project quality using **AI verification** and **GitHub authentication** for contributor validation.
 
-> 🚧 **Currently in Development** – Actively working on payment integration, GitHub account verification, and Gemini AI-based project validation.
+> 🚧 This project is currently under active development as part of a 4th semester coursework project.
 
 ---
 
-## 🚀 Features
+## 🌟 Features
 
-- 👨‍💻 **User Authentication** – Secure signup/login using Firebase Authentication.
-- 🧾 **Project Listings** – Users can list academic projects for sale with details and repository links.
-- 💸 **Integrated Payments** – (Coming Soon) Buyers can purchase projects through a secure payment gateway.
-- 🔍 **Project Verification** – (Planned) Uses **Gemini AI API** to scan and verify the authenticity and quality of uploaded projects.
-- 🔐 **GitHub Account Verification** – (Planned) Verifies seller identity by linking their GitHub account on the backend.
-- 📂 **Download Access** – Post-purchase, users can securely download the project in `.zip` format.
-- 📊 **Dashboard** – (Coming Soon) For sellers to manage projects, sales, and downloads.
+- 🛒 **Project Marketplace** – Students can list and browse projects.
+- 🔐 **Authentication** – Firebase Auth supports secure login with email and GitHub.
+- 🧠 **AI Project Verification** – Uses **Gemini AI (free tier)** to automatically review and verify projects.
+- 💳 **Secure Payments** – Integrated **Stripe (test mode)** for safe and mock financial transactions.
+- ✅ **GitHub Account Verification** – Buyers can verify sellers through their GitHub repos.
+- 🔍 **Filter & Search** – Easily find projects by tech stack, semester, or branch (coming soon).
+- 📁 **File Uploads** – Sellers can upload project ZIPs with documentation.
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer         | Technology         |
-|---------------|--------------------|
-| **Frontend**  | React.js, Tailwind CSS |
-| **Backend**   | Flask (Python)      |
-| **Authentication** | Firebase Authentication |
-| **Database**  | (Add your DB - e.g., SQLite, PostgreSQL, MongoDB, etc.) |
-| **Payment**   | Stripe / Razorpay *(Planned)* |
-| **AI Validation** | Gemini AI (Google) *(Planned)* |
-| **Code Verification** | GitHub OAuth *(Planned)* |
+| Layer        | Tech Stack                         |
+|--------------|-------------------------------------|
+| **Frontend** | React.js, Tailwind CSS              |
+| **Backend**  | Flask (Python), Gemini AI (API)     |
+| **Auth**     | Firebase Authentication, GitHub OAuth |
+| **Payments** | Stripe (Test Mode)                  |
+| **Database** | SQLite (development), PostgreSQL (future) |
 
 ---
 
-## 📷 Screenshots (Coming Soon)
+## 🔗 Live Preview
 
-Add screenshots/gifs of your UI here to showcase functionality.
+> Coming Soon...
 
 ---
-
 ## 📁 Installation
 
 ```bash
