@@ -58,7 +58,6 @@ def firebaseAuthmiddleware(f):
             decoded=firebase_auth.verify_id_token(token)
             firebase_uid=decoded['uid']
             user = Users.query.filter_by(firebase_uid=firebase_uid).first()
-            print(user.user_id)
             if not user:
                 return jsonify({'message': 'User profile not found'}), 404
             request.user=user

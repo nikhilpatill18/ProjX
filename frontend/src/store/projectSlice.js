@@ -77,26 +77,36 @@ export const { setProjects, setloading, clearloading, updateStatus, removebookma
 export default productslice.reducer
 
 
-const idtoken = localStorage.getItem('idtoken')
+
 
 export function getProjects() {
     return async function getProjectThunks(dispatch, getstate) {
-        dispatch(setloading())
-        const response = await axios.get('http://127.0.0.1:5000/api/projects/getproject', {
-            headers: {
-                'Authorization': `Bearer ${idtoken}`
-            }
-        })
-
-        dispatch(setProjects(response.data.data))
-        dispatch(clearloading())
+        const idtoken = localStorage.getItem('idtoken')
+        try {
+            dispatch(setloading())
+            const response = await axios.get('http://127.0.0.1:5000/api/projects/getproject', {
+                headers: {
+                    'Authorization': `Bearer ${idtoken}`
+                }
+            })
+    
+            dispatch(setProjects(response.data.data))
+            dispatch(clearloading())
+        } catch (error) {
+            console.log("error in fetching the project");
+            dispatch(clearloading())
+            
+            
+        }
     }
 }
 
 
 export function UpdateProjectStatus(projectId) {
+    const idtoken = localStorage.getItem('idtoken')
     return async function UpdateProjectStatusThunk(dispatch, getstate) {
-        const response = await axios.put(`http://127.0.0.1:5000/api/projects/${projectId}/mark-sold`, {}, {
+        try {
+            const response = await axios.put(`http://127.0.0.1:5000/api/projects/${projectId}/mark-sold`, {}, {
             headers: {
                 'Authorization': `Bearer ${idtoken}`
             }
@@ -108,22 +118,37 @@ export function UpdateProjectStatus(projectId) {
             console.log('failed to update the state');
 
         }
+        } catch (error) {
+            console.log("error in updating the project");
+            // dispatch(clearloading())
+            
+            
+        }
 
     }
 }
 export function getBuyedproject() {
     return async function getBuyedprojectStatusThunk(dispatch, getstate) {
-            const response = await axios.get('http://127.0.0.1:5000/api/projects/buyed-project', {
-                headers: {
-                    'Authorization': `Bearer ${idtoken}`
-                }
-            })
-        if (response.status == 200) {
-            dispatch(addBuyedProject(response.data.data))
-        }
-        else {
-            console.log('failed to update the state');
-
+        const idtoken = localStorage.getItem('idtoken')
+        dispatch(setloading())
+        try {
+                const response = await axios.get('http://127.0.0.1:5000/api/projects/buyed-project', {
+                    headers: {
+                        'Authorization': `Bearer ${idtoken}`
+                    }
+                })
+            if (response.status == 200) {
+                dispatch(addBuyedProject(response.data.data))
+            }
+            else {
+                console.log('failed to update the state');
+    
+            }
+        } catch (error) {
+            console.log("error in fetching the buying project");
+            dispatch(clearloading())
+            
+            
         }
 
     }

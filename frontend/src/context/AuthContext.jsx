@@ -6,6 +6,7 @@ import { onAuthStateChanged, getIdToken } from 'firebase/auth'
 import { useDispatch } from 'react-redux'
 import { getProjects } from '../store/projectSlice.js'
 import { getBuyedproject } from '../store/projectSlice.js'
+import { Navigate } from 'react-router-dom'
 
 const AuthContext = createContext()
 // export const useAuth = () => useContext(AuthContext)
@@ -22,6 +23,7 @@ export const AuthProvider = ({ children }) => {
             setFirebaseuser(user)
             if (user) {
                 try {
+                    console.log(user);
                     const tokenId = await getIdToken(user)
                     const response = await axios.get('http://127.0.0.1:5000/api/auth/me', { headers: { Authorization: `Bearer ${tokenId}` } })
                     console.log(response.data.data);
@@ -44,8 +46,27 @@ export const AuthProvider = ({ children }) => {
         })
         return () => unsubscribe()
     }, [])
+
+    
+const fetchUserProfile = async () => {
+    const token = await auth.currentUser?.getIdToken()
+    if (!token) return
+    try {
+        const response = await axios.get('http://127.0.0.1:5000/api/auth/me', {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+        localStorage.setItem('idtoken', token)
+        setUserprofile(response.data.data)
+        setIdtoken(token)
+        dispatch(getProjects())
+        dispatch(getBuyedproject())
+    } catch (error) {
+        console.error("Failed to fetch user profile:", error)
+    }
+}
+
     return (
-        <AuthContext.Provider value={{ firebaseuser, userprofile, idtoken, loading }}>
+        <AuthContext.Provider value={{ firebaseuser, userprofile, idtoken, loading,fetchUserProfile }}>
             {children}
         </AuthContext.Provider>
     )

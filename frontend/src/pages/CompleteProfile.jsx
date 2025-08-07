@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Upload, User, UserCheck, School, Save, ArrowLeft } from 'lucide-react'
 import { auth } from '../libs/Firebase'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { AuthContext } from '../context/AuthContext'
 
 const CompleteProfile = () => {
     const [form, setForm] = useState({ username: '', full_name: '', college_name: '' })
@@ -14,6 +15,7 @@ const CompleteProfile = () => {
     const [usernames, setUsernames] = useState([])
     const [isUsernameAvailable, setIsUsernameAvailable] = useState(true)
     const navigate = useNavigate()
+    const {fetchUserProfile}=useContext(AuthContext)
 
 
         // to fetch all the username
@@ -76,6 +78,7 @@ const CompleteProfile = () => {
 
             if (response.status === 200) {
                 toast.success('Profile updated successfully!')
+                await fetchUserProfile()
                 navigate('/dashboard')
             } else {
                 toast.error('Failed to update profile')

@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState,useContext } from 'react'
 import { Upload, Mail, Lock, User, UserCheck, Eye, EyeOff, Chrome } from 'lucide-react'
 import { auth } from '../libs/Firebase.js'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from 'firebase/auth'
 import axios from 'axios'
 import {useNavigate} from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { AuthContext } from '../context/AuthContext.jsx'
 
     
-// google signin funcality is left
+// google signin funcality is completed
 const Signup = () => {
     const [form, setForm] = useState({ email: '', password: '', username: '', full_name: '' })
     const [profilePhoto, setProfilePhoto] = useState(null)
@@ -17,6 +18,7 @@ const Signup = () => {
     const [usernames, setUsernames] = useState([])
     const [isUsernameAvailable, setIsUsernameAvailable] = useState(true)
     const navigate=useNavigate()
+    const {fetchUserProfile}=useContext(AuthContext)
 
 
     // to fetch all the username
@@ -68,7 +70,6 @@ const Signup = () => {
             if (response.status === 200) {
             sendEmailVerification(auth.currentUser).then(()=>toast.info('check your mail to verify the email address')).catch((err)=>console.log(err)
             )
-                console.log('User created successfully')
                 navigate('/complete-profile')
             } else {
                 await userCred.user.delete()
@@ -89,14 +90,9 @@ const Signup = () => {
             userCred = await createUserWithEmailAndPassword(auth, form.email, form.password)
             const idToken = await userCred.user.getIdToken()
             localStorage.setItem('idtoken',idToken)
-            
-
             const response = await axios.get('http://127.0.0.1:5000/api/auth/register', {
                 headers: { 'Authorization': `Bearer ${idToken}` }
             })
-            console.log(response);
-            
-
             if (response.status === 200) {
                 sendEmailVerification(auth.currentUser).then(()=>toast.info('check your mail to verify the email address')).catch((err)=>console.log(err)
             )

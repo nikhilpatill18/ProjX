@@ -25,6 +25,7 @@ const Sidebar = () => {
     const handleLogout = async () => {
         try {
             await signOut(auth)
+            localStorage.removeItem('idtoken')
             navigate('/login')
         } catch (error) {
             console.error('Logout error:', error)
