@@ -5,6 +5,7 @@ import { useContext } from 'react'
 import Sidebar from './Sidebar'
 import { ToastContainer } from 'react-toastify'
 import { auth } from '../libs/Firebase'
+import LoadingComponent from './Loading'
 
 import { onAuthStateChanged } from 'firebase/auth'
 const Protectedroute = ({ children }) => {
@@ -30,7 +31,7 @@ const Protectedroute = ({ children }) => {
       return () => unsubscribe();
 
     },[])
-    if (loading|| checking) return <div>loading...</div>
+    if (loading|| checking) return <div><LoadingComponent message='loading'/></div>
     if (!firebaseuser) return <Navigate to={'/login'} />
     if(!userprofile.IsprofileCompletd) return <Navigate to={'/complete-profile'}/>
     if(!isAllowed)return <Navigate to={'/verify-email'} />
