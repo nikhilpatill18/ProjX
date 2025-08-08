@@ -75,7 +75,6 @@ README:
 def verify_hardware_images(image_files):
     genai.configure(api_key=current_app.config['GEMINI_API_KEY'])
     model=genai.GenerativeModel('gemini-1.5-pro')
-    print('hello')
     
     """
     image_files: list of FileStorage objects from request.files.getlist()
@@ -94,7 +93,6 @@ def verify_hardware_images(image_files):
             response = model.generate_content(content)
             answer = response.text.lower()
             print("Gemini answer:", answer)
-
             if "yes" in answer:
                 return True
         except Exception as e:
@@ -109,7 +107,7 @@ def verify_hardware_images(image_files):
 @project_bp.route('/anayze-hardware',methods=['POST'])
 def analyze_image():
      try:
-          images=request.files.getlist('hardware_image')
+          images=request.files.getlist('hardware_images')
           res=verify_hardware_images(images)
           print(res)
           return jsonify({'message':res})
@@ -162,7 +160,7 @@ def add_project():
     try:
         userID=request.user.user_id
         category=request.form.get('category')
-        category_obj=Category.query.filter(category==category).first()
+        category_obj=Category.query.filter_by(name=category).first()
         cat_id=category_obj.id
         if category=='SOFTWARE':
             title=request.form.get('title')
@@ -216,7 +214,6 @@ def add_project():
                 'images': image_urls
             }}),200
         else :
-             
             title=request.form.get('title')
             description=request.form.get('description')
             price=request.form.get('price')
@@ -227,7 +224,7 @@ def add_project():
           #   existed_project=HardwareProject.query.filter_by(repo_url=repo_url).first()
           #   if existed_project:
           #       return jsonify({'message':'Project Already registed'})
-            project=Project(title=title,description =description,price=price,complexity=complexity,duration_hours=duration_hours,user_id=userID,category_id=cat_id,subject=subject)
+            project=Project(title=title,description =description,price=price,complexity=complexity,duration_hours=duration_hours,user_id=userID,category_id=cat_id,subject=subject,is_verified=False if is_verified=='False' else True)
             db.session.add(project)
             db.session.flush()
             # upload the images to the cloudiniary and data base
