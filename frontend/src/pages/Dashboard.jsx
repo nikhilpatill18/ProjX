@@ -10,6 +10,7 @@ import {
     Filter,
     Calendar,
     User,
+    Check
 } from 'lucide-react'
 import axios from 'axios'
 import { useSelector } from 'react-redux'
@@ -113,16 +114,25 @@ const Dashboard = () => {
             <div className="mb-8">
                 <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Welcome Back, {userprofile.username}</h1>
+                        <h1 className="text-xl sm:text-3xl font-bold text-white mb-2">Welcome Back, {userprofile.username}</h1>
                         <p className="text-gray-400">Manage and track your projects</p>
                     </div>
-                    <NavLink
-                        to={`http://127.0.0.1:5000/api/auth/github/login?idtoken=${idtoken}`}
-                        className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105"
-                    >
-                        <Plus className="w-5 h-5" />
-                        <span>verifygithub</span>
-                    </NavLink>
+                    {
+                            userprofile.github_verified ? (
+                                <span className="flex items-center px-2 py-1 gap-2 sm:px-6 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold rounded-lg">
+                                     <Check className="w-5 h-5" />
+                                 <span>GitHub Verified</span>
+                                     </span>
+  ) : (
+    <NavLink
+      to={`http://127.0.0.1:5000/api/auth/github/login?idtoken=${idtoken}`}
+      className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105"
+    >
+      <Plus className="w-5 h-5" />
+      <span>Verify GitHub</span>
+    </NavLink>
+  )
+}
                 </div>
 
                 {/* Search and Filter Bar */}

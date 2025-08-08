@@ -29,6 +29,7 @@ import {
     MessageCircle,
     Settings,
     Edit2,
+    ExternalLink
     
 } from 'lucide-react'
 import { toast } from 'react-toastify'
@@ -71,7 +72,6 @@ const MyProjectPage = () => {
     }
 
     const handleEdit = () => {
-        console.log('hello');
         setedit(!edit)
     }
 
@@ -329,11 +329,11 @@ const MyProjectPage = () => {
     </div>
 
     {/* Tech Stack */}
-    {project.tech_stack && (
+    {project.Project_data?.tech_stack && (
         <div className="mt-6">
             <h3 className="text-xl font-semibold text-white mb-3">Tech Stack</h3>
             <div className="flex flex-wrap gap-2">
-                {project.tech_stack.split(', ').map((tech, index) => (
+                {project.Project_data.tech_stack.split(', ').map((tech, index) => (
                     <span key={index} className="bg-gray-700 text-gray-300 px-3 py-1 rounded-lg text-sm">
                         {tech.trim()}
                     </span>
@@ -420,35 +420,21 @@ const MyProjectPage = () => {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Quick Actions */}
-                        {/* <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-                            <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-                            <div className="space-y-3">
-                                <button
-                                    onClick={handleEdit}
-                                    className="w-full flex items-center space-x-2 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                                >
-                                    <Edit className="w-4 h-4" />
-                                    <span>Edit Project</span>
-                                </button>
-                                <button className="w-full flex items-center space-x-2 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">
-                                    <Settings className="w-4 h-4" />
-                                    <span>Project Settings</span>
-                                </button>
-                                <button className="w-full flex items-center space-x-2 py-2 px-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
-                                    <MessageCircle className="w-4 h-4" />
-                                    <span>View Messages</span>
-                                </button>
-                                <button
-                                    onClick={handleDelete}
-                                    className="w-full flex items-center space-x-2 py-2 px-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                    <span>Delete Project</span>
-                                </button>
-                            </div>
-                        </div> */}
+                          {project.Project_data.repo_url && (
+                                                <div className="mb-6">
+                                                    <h3 className="text-xl font-semibold text-white mb-3">Repository</h3>
+                                                    <a 
+                                                        href={project.Project_data.repo_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors"
+                                                    >
+                                                        <Github className="w-5 h-5" />
+                                                        <span>View Repository</span>
+                                                        <ExternalLink className="w-4 h-4" />
+                                                    </a>
+                                                </div>
+                                            )}
                     </div>
                 </div>
             </div>

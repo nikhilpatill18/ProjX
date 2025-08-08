@@ -105,6 +105,16 @@ const AddProject = () => {
             })
             if (reponse.status == 200) {
                 toast.success('Project added success fully')
+                setFormData({
+        title: '',
+        description: '',
+        duration_hours: '',
+        complexity: '',
+        price: '',
+        repo_url: '',
+        subject: '',
+        tech_stack: ''
+    })
             }
             else {
                 toast.error('Failed to add project')
@@ -130,7 +140,7 @@ const AddProject = () => {
             formdata.append('description', formData.description)
             formdata.append('price', formData.price)
             formdata.append('complexity', formData.complexity)
-            formdata.append('duration_hour', formData.duration_hours)
+            formdata.append('duration_hours', formData.duration_hours)
             formdata.append('subject', formData.subject)
             formdata.append('category', category)
             formdata.append('is_verified', is_verified)
@@ -145,6 +155,17 @@ const AddProject = () => {
             })
             if (reponse.status == 200) {
                 toast.success('Project added success fully')
+                setFormData({
+        title: '',
+        description: '',
+        duration_hours: '',
+        complexity: '',
+        price: '',
+        repo_url: '',
+        subject: '',
+        tech_stack: ''
+    })
+
             }
             else {
                 toast.error('Failed to add project')
@@ -218,6 +239,8 @@ const AddProject = () => {
                     'Authorization': `Bearer ${idtoken}`
                 }
             })
+            console.log(response);
+            
             if (response.status == 200) {
                 console.log(response.data.message);
 
