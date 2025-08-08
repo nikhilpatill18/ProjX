@@ -273,20 +273,20 @@ def add_project():
 @firebaseAuthmiddleware
 def getProject():
     try:
-          user=request.user
-          projects=Project.query.filter(Project.user_id!=user.user_id).all()
-          bookmark_projects=Bookmark.query.filter(Bookmark.user_id==user.user_id)
-          bookmark_ids={bp.project_id for bp in bookmark_projects}
-          result=[]
-          for project in projects:
-                print(project.id)
+        user=request.user
+        projects=Project.query.filter(Project.user_id!=user.user_id).all()
+        bookmark_projects=Bookmark.query.filter(Bookmark.user_id==user.user_id)
+        bookmark_ids={bp.project_id for bp in bookmark_projects}
+        result=[]
+        for project in projects:
                 owner_data=Users.query.filter_by(user_id=project.user_id).first()
+                print(owner_data)
                 category=Category.query.filter_by(id=project.category_id).first()
+                print(category)
                 category_name=category.name if category else None
                 if category_name=='SOFTWARE':
                      software_project=SoftwareProject.query.filter_by(project_id=project.id).first()
                      software_data=None
-                     print(software_project.id)
                      if software_project:
                           software_data={
                                'readme_verified': software_project.readme_verified,
@@ -299,9 +299,10 @@ def getProject():
                      hardware_data=None
                      if hardware_project:
                           hardware_data={
-                               'video_url': hardware_project.video_url,
+                                'video_url': hardware_project.video_url,
                                 'hardware_verified': hardware_project.hardware_verified,
                           }
+                project_data=software_data if hardware_data==None else hardware_data
                 result.append({
                 'project_id': project.id,
                 'title': project.title,
@@ -312,7 +313,7 @@ def getProject():
                 'complexity':project.complexity,
                 'images': [img.url for img in project.images],
                 'category': category_name,
-                'Project_data': hardware_data if software_data==None else software_data,
+                'Project_data': project_data,
                 'status': project.status,
                 'bookedmarked':project.id in bookmark_ids,
                 'author':{
@@ -323,10 +324,8 @@ def getProject():
                 },
                 'created_at':project.created_at
                 })
-                # print(result)
-                     
-    
-          return jsonify({'message':'done','data':result})
+                print(result)
+        return jsonify({'message':'done','data':result})
     except  Exception:
          print(Exception)
 
@@ -366,6 +365,7 @@ def search_project():
                                'video_url': hardware_project.video_url,
                                 'hardware_verified': hardware_project.hardware_verified,
                           }
+                project_data=software_data if hardware_data==None else hardware_data
                 result.append({
                 'project_id': project.id,
                 'title': project.title,
@@ -376,7 +376,7 @@ def search_project():
                 'complexity':project.complexity,
                 'images': [img.url for img in project.images],
                 'category': category_name,
-                'Project_data': hardware_data if software_data==None else software_data,
+                'Project_data': project_data,
                 'status':project.status,
                 'bookedmarked':project.id in bookmark_ids,
                 'created_at':project.created_at,
@@ -555,6 +555,7 @@ def buyed_project():
                                'video_url': hardware_project.video_url,
                                 'hardware_verified': hardware_project.hardware_verified,
                           }
+                project_data=software_data if hardware_data==None else hardware_data
                 result.append({
                 'project_id': project.id,
                 'title': project.title,
@@ -565,7 +566,7 @@ def buyed_project():
                 'complexity':project.complexity,
                 'images': [img.url for img in project.images],
                 'category': category_name,
-                'Project_data': hardware_data if software_data==None else software_data,
+                'Project_data': project_data,
                 'created_at':project.created_at,
                 'author':{
                      'avatar':owner_data.profile_photo,

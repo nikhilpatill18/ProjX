@@ -19,6 +19,7 @@ from models.users import Users
 from models.payment import Payment
 from models.projectImages import ProjectImage
 from models.Project import SoftwareProject,HardwareProject
+from models.projectImages import ProjectImage
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -42,6 +43,7 @@ app.register_blueprint(payment_bp, url_prefix='/api/payment')
 #     db.session.query(Project).delete()
 #     db.session.query(SoftwareProject).delete()
 #     db.session.query(HardwareProject).delete()
+#     db.session.query(ProjectImage).delete()
 #     db.session.query(Category).delete()
 #     db.session.query(Bookmark).delete()
 #     db.session.query(Payment).delete()
