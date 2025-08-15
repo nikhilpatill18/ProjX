@@ -1,6 +1,6 @@
 from models.payment import Payment
 from routes.auth_routes import firebaseAuthmiddleware
-from flask import jsonify,request,make_response,Blueprint
+from flask import jsonify,request,make_response,Blueprint,current_app
 import stripe
 from models import db
 from models.Project import Project
@@ -9,13 +9,14 @@ from sqlalchemy import or_
 
 payment_bp=Blueprint('payment_bp',__name__)
 
-stripe.api_key="sk_test_51R0dUjCHGVpdj2fgoJEqDBDWUEDbS9rU95DEQcDIxtrkFN1DFTbPm0OIviG35nCekccyriHeGbl1ewv7qk1fG7oV00qNNOjoYl"
+
 
 
 # payment backend created just testing from front is needed
 @payment_bp.route('/create-payment-intent',methods=['POST'])
 @firebaseAuthmiddleware
 def create_payment_intent():
+    stripe.api_key=current_app.config['STRIPE_API']
     try:
         print()
         user=request.user

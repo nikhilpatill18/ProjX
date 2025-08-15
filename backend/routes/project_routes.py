@@ -33,7 +33,6 @@ vision_model=genai.GenerativeModel('gemini-1.5-pro-vision')
 def analyze_readme(readme_text):
     genai.configure(api_key=current_app.config['GEMINI_API_KEY'])
     model=genai.GenerativeModel('gemini-1.5-pro')
-    print('hello')
 
     prompt = f"""
 You're an assistant that reviews README.md files.
