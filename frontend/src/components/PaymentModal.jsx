@@ -41,7 +41,7 @@ import { useDispatch } from 'react-redux';
 import { UpdateProjectStatus } from '../store/projectSlice';
 
 
-const PaymentModal = ({ project, setShowPayment, setUnlockDetails,  }) => {
+const PaymentModal = ({ project, setShowPayment, setUnlockDetails, shippingDetails }) => {
     const dispatch = useDispatch()
     const [upiId, setUpiId] = useState()
     const { idtoken } = useContext(AuthContext)
@@ -50,7 +50,6 @@ const PaymentModal = ({ project, setShowPayment, setUnlockDetails,  }) => {
     const [totalamount, settotalamount] = useState((price + platformfees) * 100)
     const [paymentMethod, setPaymentMethod] = useState('card')
     const projectId = project.project_id;
-
     const stripe = useStripe();
     const element = useElements();
     const CreatePaymentIntent = async () => {
@@ -70,6 +69,24 @@ const PaymentModal = ({ project, setShowPayment, setUnlockDetails,  }) => {
         }
 
     }
+
+    const handleShpping= async()=>{
+        try {
+           const response=await axios.post(`http://localhost:5000/api/projects/shipping-details/${project.project_id}`,{address:shippingDetails.address,phonenumber:shippingDetails.phone},{
+            headers:{
+                'Authorization':`Bearer ${idtoken}`
+            }
+           })
+           if(response.status==200){
+            return
+           }
+            
+        } catch (error) {
+            console.log(error);
+            
+            
+        }
+    }
     const handlePayement = async () => {
         try {
             const clientSecret = await CreatePaymentIntent()
@@ -83,6 +100,7 @@ const PaymentModal = ({ project, setShowPayment, setUnlockDetails,  }) => {
                     payment_intent_id: result.paymentIntent.id,
                     status: "succeeded",
                 });
+                handleShpping
                 dispatch(updateStatus(project.project_id))
                 dispatch(UpdateProjectStatus(project.project_id))
                 setUnlockDetails(true)
@@ -104,8 +122,6 @@ const PaymentModal = ({ project, setShowPayment, setUnlockDetails,  }) => {
 
         try {
             const clientSecret = await CreatePaymentIntent();
-            console.log(clientSecret);
-
             const result = await stripe.confirmPayment({
                 clientSecret,
                 paymentMethod: {

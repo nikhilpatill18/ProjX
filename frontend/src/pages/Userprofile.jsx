@@ -17,22 +17,44 @@ import {
     Briefcase,
     DollarSign,
     ShoppingCart,
-    IndianRupee
+    IndianRupee,
+    ExternalLink
 } from 'lucide-react'
 import axios from 'axios'
 
 const UserProfile = () => {
-    const { idtoken, userprofile } = useContext(AuthContext)
+    const { idtoken, userprofile, setUserProfile: setContextUserProfile } = useContext(AuthContext)
 
     const [userProfile, setUserProfile] = useState(userprofile)
     const [isEditing, setIsEditing] = useState(false)
     const [editForm, setEditForm] = useState({})
     const [loading, setLoading] = useState(false)
     const [saving, setSaving] = useState(false)
+    const [verifyingGithub, setVerifyingGithub] = useState(false)
+
+    useEffect(() => {
+        if (userprofile) {
+            setUserProfile(userprofile)
+            setEditForm({
+                full_name: userprofile.full_name || userprofile.fullname || '',
+                username: userprofile.username || ''
+            })
+        }
+    }, [userprofile])
 
     const handleEditToggle = () => {
         if (isEditing) {
-            setEditForm(userProfile) // Reset form if canceling
+            // Reset form if canceling
+            setEditForm({
+                full_name: userProfile.full_name || userProfile.fullname || '',
+                username: userProfile.username || ''
+            })
+        } else {
+            // Initialize form with current values when starting to edit
+            setEditForm({
+                full_name: userProfile.full_name || userProfile.fullname || '',
+                username: userProfile.username || ''
+            })
         }
         setIsEditing(!isEditing)
     }
@@ -50,8 +72,7 @@ const UserProfile = () => {
             // Map form data back to API expected format
             const updateData = {
                 full_name: editForm.full_name,
-                username: editForm.username,
-                github_username: editForm.github_username
+                username: editForm.username
             }
             
             const response = await axios.put('http://127.0.0.1:5000/api/user/profile', updateData, {
@@ -64,18 +85,39 @@ const UserProfile = () => {
             // Update userProfile with the response data
             const updatedProfile = {
                 ...userProfile,
-                full_name: response.data.data.fullname,
-                username: response.data.data.username,
-                github_username: response.data.data.github_username,
-                github_verified: response.data.data.github_verified
+                full_name: response.data.data.fullname || response.data.data.full_name,
+                fullname: response.data.data.fullname || response.data.data.full_name,
+                username: response.data.data.username
             }
             
             setUserProfile(updatedProfile)
+            
+            // Also update the context if needed
+            if (setContextUserProfile) {
+                setContextUserProfile(updatedProfile)
+            }
+            
             setIsEditing(false)
         } catch (error) {
             console.error('Failed to update profile:', error)
+            // You might want to show an error message to the user here
+            alert('Failed to update profile. Please try again.')
         } finally {
             setSaving(false)
+        }
+    }
+
+    const handleVerifyGithub = async () => {
+        setVerifyingGithub(true)
+        try {
+            // Redirect to GitHub OAuth or verification endpoint
+            // This would typically redirect to your backend GitHub OAuth endpoint
+            window.location.href = 'http://127.0.0.1:5000/api/auth/github/verify'
+        } catch (error) {
+            console.error('Failed to initiate GitHub verification:', error)
+            alert('Failed to start GitHub verification. Please try again.')
+        } finally {
+            setVerifyingGithub(false)
         }
     }
 
@@ -143,18 +185,11 @@ const UserProfile = () => {
                                             className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             placeholder="Username"
                                         />
-                                        <input
-                                            type="text"
-                                            value={editForm.github_username || ''}
-                                            onChange={(e) => handleInputChange('github_username', e.target.value)}
-                                            className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            placeholder="GitHub Username"
-                                        />
                                     </div>
                                 ) : (
                                     <>
                                         <h1 className="text-3xl font-bold text-white mb-2">
-                                            {userProfile.full_name || userProfile.username}
+                                            {userProfile.full_name || userProfile.fullname || userProfile.username}
                                         </h1>
                                         <p className="text-gray-400 mb-2">@{userProfile.username}</p>
                                         <div className="flex items-center space-x-4 text-sm text-gray-400">
@@ -178,14 +213,15 @@ const UserProfile = () => {
                                     <button
                                         onClick={handleSaveProfile}
                                         disabled={saving}
-                                        className="flex items-center space-x-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                                        className="flex items-center space-x-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <Save className="w-4 h-4" />
                                         <span>{saving ? 'Saving...' : 'Save'}</span>
                                     </button>
                                     <button
                                         onClick={handleEditToggle}
-                                        className="flex items-center space-x-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                                        disabled={saving}
+                                        className="flex items-center space-x-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50"
                                     >
                                         <X className="w-4 h-4" />
                                         <span>Cancel</span>
@@ -203,24 +239,59 @@ const UserProfile = () => {
                         </div>
                     </div>
 
-                    {/* GitHub Verification Status */}
-                    {userProfile.github_username && (
-                        <div className="flex items-center space-x-2 p-3 bg-gray-700 rounded-lg">
-                            <Github className="w-5 h-5 text-gray-300" />
-                            <span className="text-gray-300">GitHub: @{userProfile.github_username}</span>
-                            {userProfile.github_verified ? (
-                                <div className="flex items-center space-x-1 text-green-400">
-                                    <CheckCircle className="w-4 h-4" />
-                                    <span className="text-sm">Verified</span>
+                    {/* GitHub Verification Section */}
+                    <div className="mt-6">
+                        {userProfile.github_username ? (
+                            <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                                <div className="flex items-center space-x-3">
+                                    <Github className="w-5 h-5 text-gray-300" />
+                                    <div>
+                                        <span className="text-gray-300">GitHub: @{userProfile.github_username}</span>
+                                        {userProfile.github_verified ? (
+                                            <div className="flex items-center space-x-1 text-green-400 mt-1">
+                                                <CheckCircle className="w-4 h-4" />
+                                                <span className="text-sm">Verified</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center space-x-1 text-yellow-400 mt-1">
+                                                <AlertCircle className="w-4 h-4" />
+                                                <span className="text-sm">Not Verified</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            ) : (
-                                <div className="flex items-center space-x-1 text-yellow-400">
-                                    <AlertCircle className="w-4 h-4" />
-                                    <span className="text-sm">Not Verified</span>
+                                {!userProfile.github_verified && (
+                                    <button
+                                        onClick={handleVerifyGithub}
+                                        disabled={verifyingGithub}
+                                        className="flex items-center space-x-2 px-3 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
+                                    >
+                                        <Shield className="w-4 h-4" />
+                                        <span>{verifyingGithub ? 'Verifying...' : 'Verify'}</span>
+                                    </button>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg border-2 border-dashed border-gray-600">
+                                <div className="flex items-center space-x-3">
+                                    <Github className="w-5 h-5 text-gray-400" />
+                                    <div>
+                                        <span className="text-gray-300">GitHub Account</span>
+                                        <p className="text-sm text-gray-400 mt-1">Connect your GitHub account to verify your projects</p>
+                                    </div>
                                 </div>
-                            )}
-                        </div>
-                    )}
+                                <button
+                                    onClick={handleVerifyGithub}
+                                    disabled={verifyingGithub}
+                                    className="flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                    <Github className="w-4 h-4" />
+                                    <ExternalLink className="w-3 h-3" />
+                                    <span>{verifyingGithub ? 'Connecting...' : 'Verify GitHub Account'}</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Stats Cards */}
@@ -256,7 +327,7 @@ const UserProfile = () => {
                             </div>
                             <div>
                                 <p className="text-gray-400 text-sm">Total Sales</p>
-                                <p className="text-2xl font-bold text-white">{userProfile.total_sale}</p>
+                                <p className="text-2xl font-bold text-white">₹{userProfile.total_sale || 0}</p>
                             </div>
                         </div>
                     </div>
@@ -273,7 +344,7 @@ const UserProfile = () => {
                         <div>
                             <label className="block text-sm font-medium text-gray-400 mb-2">Full Name</label>
                             <div className="bg-gray-700 rounded-lg px-3 py-2 text-gray-300">
-                                {userProfile.fullname || 'Not provided'}
+                                {userProfile.full_name || userProfile.fullname || 'Not provided'}
                             </div>
                         </div>
 
@@ -297,19 +368,6 @@ const UserProfile = () => {
                                 {new Date(userProfile.created_at).toLocaleDateString()}
                             </div>
                         </div>
-
-                        {userProfile.github_username && (
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-400 mb-2">GitHub Username</label>
-                                <div className="bg-gray-700 rounded-lg px-3 py-2 text-gray-300 flex items-center space-x-2">
-                                    <Github className="w-4 h-4" />
-                                    <span>@{userProfile.github_username}</span>
-                                    {userProfile.github_verified && (
-                                        <CheckCircle className="w-4 h-4 text-green-400" />
-                                    )}
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>

@@ -26,17 +26,33 @@ import {
     MessageCircle,
     Bookmark,
     BookOpen,
-    ExternalLink
+    ExternalLink,
+    MapPin,
+    Phone,
+    Truck,
+    Package,
+    Video
 } from 'lucide-react'
+import ShippingModal from './ShippingModal'
 
 
 const ProjectDetailsModal = ({ project, onClose, handlebookmark, isBookmarked, unlock = false }) => {
+    console.log(project.category);
+    
+    const [showShippingForm, setShowShippingForm] = useState(false)
+    const [shippingDetails, setShippingDetails] = useState({
+        address: '',
+        phone: ''
+    })
+
+    
     const stripePromise = loadStripe('pk_test_51R0dUjCHGVpdj2fgW4VGu8dZwYARmW61cJCPktkINkKAphZmbQlHPqTb42tJsUAPpExgvqmtNK6SRXKsMOZgmRHX00PCIvNb8y')
     const [showPayment, setShowPayment] = useState(false)
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const [unlockDetails, setUnlockDetails] = useState(unlock)
     const [loading, setLoading] = useState(false)
     const [isLiked, setIsLiked] = useState(false)
+    
     const nextImage = () => {
         setCurrentImageIndex((prev) => (prev + 1) % project.images.length)
     }
@@ -62,18 +78,27 @@ const ProjectDetailsModal = ({ project, onClose, handlebookmark, isBookmarked, u
         }
     }
 
+    const getShippingStatusColor = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'pending': return 'text-yellow-400 bg-yellow-400/10'
+            case 'processing': return 'text-blue-400 bg-blue-400/10'
+            case 'shipped': return 'text-purple-400 bg-purple-400/10'
+            case 'delivered': return 'text-green-400 bg-green-400/10'
+            case 'cancelled': return 'text-red-400 bg-red-400/10'
+            default: return 'text-gray-400 bg-gray-400/10'
+        }
+    }
+
     const handleBookmark = async () => {
         handlebookmark()
     }
 
     const handleLike = () => {
         setIsLiked(!isLiked)
-        // Add API call to like/unlike
         console.log(`Project ${isLiked ? 'unliked' : 'liked'}:`, project.project_id)
     }
 
     const handleShare = () => {
-        // Add share functionality
         if (navigator.share) {
             navigator.share({
                 title: project.title,
@@ -81,10 +106,185 @@ const ProjectDetailsModal = ({ project, onClose, handlebookmark, isBookmarked, u
                 url: window.location.href
             })
         } else {
-            // Fallback: copy to clipboard
             navigator.clipboard.writeText(window.location.href)
             alert('Link copied to clipboard!')
         }
+    }
+
+    const handleBuynow = () => {
+        if (project.category === 'HARDWARE') {
+            setShowShippingForm(true)
+        } else {
+            setShowPayment(true)
+        }
+    }
+
+    const renderProjectSpecificDetails = () => {
+        if (project.category === 'SOFTWARE') {
+            return (
+                <>
+                    {/* Tech Stack */}
+                    {project.Project_data?.tech_stack && (
+                        <div>
+                            <h3 className="text-lg font-semibold text-white mb-3">Tech Stack</h3>
+                            <div className="flex flex-wrap gap-2">
+                                {project.Project_data.tech_stack.split(', ').map((tech, index) => (
+                                    <span key={index} className="bg-gray-800 text-gray-300 px-3 py-1 rounded-full text-sm border border-gray-700">
+                                        {tech.trim()}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Software Project Features */}
+                    {unlockDetails && (
+                        <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+                            <h3 className="text-lg font-semibold text-white mb-3">Project Details</h3>
+                            <div className="text-gray-300 space-y-2">
+                                <p>✅ Complete source code with documentation</p>
+                                <p>✅ Step-by-step implementation guide</p>
+                                <p>✅ All necessary dependencies included</p>
+                                <p>✅ Responsive design for all devices</p>
+                                <p>✅ 30-day support included</p>
+                            </div>
+                        </div>
+                    )}
+                </>
+            )
+        } else if (project.category === 'HARDWARE') {
+            return (
+                <>
+                    {/* Hardware Video */}
+                    {project.Project_data?.video_url && (
+                        <div>
+                            <h3 className="text-lg font-semibold text-white mb-3">Demo Video</h3>
+                            <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+                                <a
+                                    href={project.Project_data.video_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors"
+                                >
+                                    <Video className="w-5 h-5" />
+                                    <span>Watch Project Demo</span>
+                                    <ExternalLink className="w-4 h-4" />
+                                </a>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Shipping Information */}
+                    {unlockDetails && project.Project_data && (
+                        <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+                            <h3 className="text-lg font-semibold text-white mb-3">Shipping Information</h3>
+                            <div className="space-y-3">
+                                {project.Project_data['Shipping address'] && (
+                                    <div className="flex items-start space-x-3">
+                                        <MapPin className="w-5 h-5 text-gray-400 mt-1 flex-shrink-0" />
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-300">Delivery Address</p>
+                                            <p className="text-gray-400 text-sm">{project.Project_data['Shipping address']}</p>
+                                        </div>
+                                    </div>
+                                )}
+                                {project.Project_data.phonenumber && (
+                                    <div className="flex items-center space-x-3">
+                                        <Phone className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-300">Contact Number</p>
+                                            <p className="text-gray-400 text-sm">{project.Project_data.phonenumber}</p>
+                                        </div>
+                                    </div>
+                                )}
+                                {project.Project_data.status && (
+                                    <div className="flex items-center space-x-3">
+                                        <Truck className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-300">Shipping Status</p>
+                                            <span className={`px-2 py-1 rounded-full text-xs ${getShippingStatusColor(project.Project_data.status)}`}>
+                                                {project.Project_data.status}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Hardware Project Features */}
+                    {unlockDetails && (
+                        <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+                            <h3 className="text-lg font-semibold text-white mb-3">Hardware Package Includes</h3>
+                            <div className="text-gray-300 space-y-2">
+                                <p>✅ Complete hardware components</p>
+                                <p>✅ Detailed assembly instructions</p>
+                                <p>✅ Circuit diagrams and schematics</p>
+                                <p>✅ Required software/firmware</p>
+                                <p>✅ 30-day warranty and support</p>
+                            </div>
+                        </div>
+                    )}
+                </>
+            )
+        }
+        return null
+    }
+
+    const renderDownloadSection = () => {        
+        if (project.category === 'SOFTWARE' && unlockDetails) {
+            return (
+                <div className="space-y-3">
+                    {project.Project_data?.repo_url && (
+                        <>
+                            <a
+                                href={`${project.Project_data.repo_url}/archive/refs/heads/main.zip`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                            >
+                                <Download className="w-4 h-4" />
+                                <span>Download Zip</span>
+                            </a>
+                            <a
+                                href={project.Project_data.repo_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                            >
+                                <Github className="w-4 h-4" />
+                                <span>Repository</span>
+                                <ExternalLink className="w-4 h-4" />
+                            </a>
+                        </>
+                    )}
+                </div>
+            )
+        } else if (project.category === 'HARDWARE' && unlockDetails) {
+            return (
+                <div className="space-y-3">
+                    {project.Project_data?.video_url && (
+                        <a
+                            href={project.Project_data.video_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                        >
+                            <Play className="w-4 h-4" />
+                            <span>View Demo</span>
+                            <ExternalLink className="w-4 h-4" />
+                        </a>
+                    )}
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 text-center">
+                        <Package className="w-5 h-5 text-green-400 mx-auto mb-2" />
+                        <p className="text-green-400 text-sm">
+                            Hardware will be shipped to your address
+                        </p>
+                    </div>
+                </div>
+            )
+        }
+        return null
     }
 
     return (
@@ -187,10 +387,16 @@ const ProjectDetailsModal = ({ project, onClose, handlebookmark, isBookmarked, u
                                                 <div className={`px-2 py-1 rounded-full text-xs ${getStatusColor(project.status)}`}>
                                                     {project.status}
                                                 </div>
-                                                {project.software?.readme_verified && (
+                                                {project.category === 'SOFTWARE' && project.Project_data?.readme_verified && (
                                                     <div className="bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs flex items-center space-x-1">
                                                         <BookOpen className="w-3 h-3" />
                                                         <span>README</span>
+                                                    </div>
+                                                )}
+                                                {project.category === 'HARDWARE' && project.Project_data?.hardware_verified && (
+                                                    <div className="bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs flex items-center space-x-1">
+                                                        <CheckCircle className="w-3 h-3" />
+                                                        <span>Hardware Verified</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -223,33 +429,8 @@ const ProjectDetailsModal = ({ project, onClose, handlebookmark, isBookmarked, u
                                         </div>
                                     </div>
 
-                                    {/* Tech Stack */}
-                                    {project.software?.tech_stack && (
-                                        <div>
-                                            <h3 className="text-lg font-semibold text-white mb-3">Tech Stack</h3>
-                                            <div className="flex flex-wrap gap-2">
-                                                {project.software.tech_stack.split(', ').map((tech, index) => (
-                                                    <span key={index} className="bg-gray-800 text-gray-300 px-3 py-1 rounded-full text-sm border border-gray-700">
-                                                        {tech.trim()}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Project Features or Description Details */}
-                                    {unlockDetails && (
-                                        <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-                                            <h3 className="text-lg font-semibold text-white mb-3">Project Details</h3>
-                                            <div className="text-gray-300 space-y-2">
-                                                <p>✅ Complete source code with documentation</p>
-                                                <p>✅ Step-by-step implementation guide</p>
-                                                <p>✅ All necessary dependencies included</p>
-                                                <p>✅ Responsive design for all devices</p>
-                                                <p>✅ 30-day support included</p>
-                                            </div>
-                                        </div>
-                                    )}
+                                    {/* Category-specific details */}
+                                    {renderProjectSpecificDetails()}
                                 </div>
                             </div>
 
@@ -267,7 +448,7 @@ const ProjectDetailsModal = ({ project, onClose, handlebookmark, isBookmarked, u
 
                                     <div className="space-y-4 mb-6">
                                         <button
-                                            onClick={() => setShowPayment(true)}
+                                            onClick={handleBuynow}
                                             disabled={project.status === 'sold'}
                                             className={`w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 ${project.status === 'sold'
                                                 ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
@@ -279,35 +460,11 @@ const ProjectDetailsModal = ({ project, onClose, handlebookmark, isBookmarked, u
                                         </button>
 
                                         {unlockDetails ? (
-                                            <div className="space-y-3">
-                                                {project.Project_data && (
-                                                    <a
-                                                        href={`${project.Project_data.repo_url}/archive/refs/heads/main.zip`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center space-x-2"
-                                                    >
-                                                        
-                                                        <span>Download Zip</span>
-                                                    </a>
-                                                )}
-                                                {project.Project_data?.repo_url && (
-                                                    <a
-                                                        href={project.Project_data.repo_url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg transition-colors flex items-center justify-center space-x-2"
-                                                    >
-                                                        <Github className="w-4 h-4" />
-                                                        <span>Repository</span>
-                                                        <ExternalLink className="w-4 h-4" />
-                                                    </a>
-                                                )}
-                                            </div>
+                                            renderDownloadSection()
                                         ) : (
                                             <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 text-center">
                                                 <p className="text-yellow-400 text-sm">
-                                                    🔒 Complete the payment process to unlock project details and access links
+                                                    🔒 Complete the payment process to unlock project details and access {project.category === 'HARDWARE' ? 'hardware information' : 'links'}
                                                 </p>
                                             </div>
                                         )}
@@ -330,6 +487,14 @@ const ProjectDetailsModal = ({ project, onClose, handlebookmark, isBookmarked, u
                                                 {project.status}
                                             </span>
                                         </div>
+                                        {project.category === 'HARDWARE' && project.Project_data?.status && unlockDetails && (
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-gray-400">Shipping</span>
+                                                <span className={`px-2 py-1 rounded-full text-xs ${getShippingStatusColor(project.Project_data.status)}`}>
+                                                    {project.Project_data.status}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -395,12 +560,19 @@ const ProjectDetailsModal = ({ project, onClose, handlebookmark, isBookmarked, u
                     </div>
                 </div>
             </div>
+            {
+                showShippingForm && (
+                    <ShippingModal setShippingDetails={setShippingDetails} shippingDetails={shippingDetails} setShowPayment={setShowPayment} setShowShippingForm={setShowShippingForm}/>
+                )
+            }
+
             {showPayment && (
                 <Elements stripe={stripePromise}>
                     <PaymentModal
                         project={project}
                         setShowPayment={setShowPayment}
                         setUnlockDetails={setUnlockDetails}
+                        shippingDetails={shippingDetails}
                     />
                 </Elements>
             )}
