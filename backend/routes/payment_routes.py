@@ -73,7 +73,6 @@ def get_history():
         )).all()
     history=[]
     for payment,project,user in result:
-        print(user_id==payment.buyer_id)
         history.append({'projectname':project.title,'paymentStatus':payment.status,'paymentDate':payment.created_at,'amount':payment.amount,'username':user.username,'project_id':project.id,'payment_id':payment.id,'project_owner_id':user.user_id,'activity':'bought'if user_id==payment.buyer_id else 'sold'
                         
                         })

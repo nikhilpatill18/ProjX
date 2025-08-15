@@ -138,9 +138,6 @@ def me():
         buyedProject=Payment.query.filter_by(buyer_id=user.user_id).count()
         soldProject=db.session.query(Project,Payment).join(Project,Project.id==Payment.project_id).filter(Project.user_id==user.user_id).count()
         total_paymentreceived=db.session.query(func.sum(Payment.amount)).join(Project,Project.id==Payment.project_id).filter(Payment.status=='succeeded',Project.user_id==user.user_id).scalar()
-        # print(total_paymentreceived/100)
-        print(buyedProject,'buyedproject')
-        print(soldProject,'soldproject')
         return jsonify({'message':'success','data':{
             'user_id':user.user_id,
             'firebase_uid':user.firebase_uid,

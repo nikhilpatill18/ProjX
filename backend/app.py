@@ -20,6 +20,7 @@ from models.payment import Payment
 from models.projectImages import ProjectImage
 from models.Project import SoftwareProject,HardwareProject
 from models.projectImages import ProjectImage
+from models.shippingdeatils import ShippingDetails
 
 app = Flask(__name__)
 app.config.from_object(Config)

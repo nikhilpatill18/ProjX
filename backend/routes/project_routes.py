@@ -17,6 +17,7 @@ from models.projectImages import ProjectImage
 from models.payment import Payment
 from models.bookmark import Bookmark
 from models.users import Users
+from models.shippingdeatils import ShippingDetails
 project_bp=Blueprint('/api/projects',__name__)
 cloudinary.config(
     cloud_name= 'dwg1z2iih',
@@ -280,9 +281,7 @@ def getProject():
         result=[]
         for project in projects:
                 owner_data=Users.query.filter_by(user_id=project.user_id).first()
-                print(owner_data)
                 category=Category.query.filter_by(id=project.category_id).first()
-                print(category)
                 category_name=category.name if category else None
                 if category_name=='SOFTWARE':
                      software_project=SoftwareProject.query.filter_by(project_id=project.id).first()
@@ -324,7 +323,6 @@ def getProject():
                 },
                 'created_at':project.created_at
                 })
-                print(result)
         return jsonify({'message':'done','data':result})
     except  Exception:
          print(Exception)
@@ -533,14 +531,12 @@ def buyed_project():
         bookmark_projects=Bookmark.query.filter(Bookmark.user_id==user.user_id)
         bookmark_ids={bp.project_id for bp in bookmark_projects}
         for project in buyed_project:
-                print(project.id)
                 category=Category.query.filter_by(id=project.category_id).first()
                 category_name=category.name if category else None
                 owner_data=Users.query.filter_by(user_id=project.user_id).first()
                 if category_name=='SOFTWARE':
                      software_project=SoftwareProject.query.filter_by(project_id=project.id).first()
                      software_data=None
-                     print(software_project.id)
                      if software_project:
                           software_data={
                                'readme_verified': software_project.readme_verified,
@@ -550,10 +546,14 @@ def buyed_project():
                 else:
                      hardware_project=HardwareProject.query.filter_by(project_id=project.id).first()
                      hardware_data=None
+                     shipping_details=ShippingDetails.query.filter_by(project_id=project.id).first()
                      if hardware_project:
                           hardware_data={
                                'video_url': hardware_project.video_url,
                                 'hardware_verified': hardware_project.hardware_verified,
+                                'Shipping address':shipping_details.shipping_address,
+                                'phonenumber':shipping_details.phone_number,
+                                'status':shipping_details.status
                           }
                 project_data=software_data if hardware_data==None else hardware_data
                 result.append({
@@ -567,6 +567,7 @@ def buyed_project():
                 'images': [img.url for img in project.images],
                 'category': category_name,
                 'Project_data': project_data,
+                'status':project.status,
                 'created_at':project.created_at,
                 'author':{
                      'avatar':owner_data.profile_photo,
@@ -576,6 +577,8 @@ def buyed_project():
                 },
                 'bookedmarked':project.id in bookmark_ids,
                 })
+                hardware_data=None
+                software_data=None
         return jsonify({'message':'success','data':result}),200
           
     except:
@@ -612,6 +615,7 @@ def delete_project(id):
 
 @project_bp.route('/<int:id>',methods=['PUT'])
 def edit_project(id):
+     
      project_id=id
      title=request.form.get('title')
      description=request.form.get('description')
@@ -627,3 +631,22 @@ def edit_project(id):
           return jsonify({'message':'Project data update succesfully'}),200
      except Exception as e:
           print(e)
+
+
+# to add the shipping details
+
+@project_bp.route('/shipping-details/<int:project_id>',methods=['POST'])
+@firebaseAuthmiddleware
+def shipping_details(project_id):
+     try:
+          user=request.user
+          address=request.form.get('address')
+          phone_number=request.form.get('phonenumber')
+          shipping_address=ShippingDetails(project_id=project_id,shipping_address=address,phone_number=phone_number,user_id=user.user_id)
+          db.session.add(shipping_address)
+          db.session.commit()
+          return jsonify({'message':'successFully added shipping address'}),200
+     except Exception as e:
+          print(e)
+          return jsonify({'message':'server error'}),500
+     
