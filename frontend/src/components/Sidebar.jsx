@@ -9,7 +9,7 @@ import {
     ChevronLeft,
     ChevronRight,
     Menu,
-    X
+    X,ListOrderedIcon
 } from 'lucide-react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { auth } from '../libs/Firebase'
@@ -62,6 +62,12 @@ const Sidebar = () => {
             icon: Settings,
             label: 'Settings',
             path: '/setting',
+            color: 'text-gray-400'
+        },
+        {
+            icon: ListOrderedIcon,
+            label: 'Orders',
+            path: '/orders',
             color: 'text-gray-400'
         },
     ]

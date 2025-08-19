@@ -16,6 +16,7 @@ import { Provider } from 'react-redux'
 import store from './store/Store.js'
 import VerifyEmail from './pages/VerifyEmail.jsx'
 import CompleteProfile from './pages/CompleteProfile.jsx'
+import SellerOrdersDashboard from './pages/SellerProjectDashboard.jsx'
 const App = () => {
   return (
     <div>
@@ -35,6 +36,7 @@ const App = () => {
               <Route path='/projects/:projectId' element={<Protectedroute><MyProjectPage /></Protectedroute>} />
               <Route path='/complete-profile' element={<CompleteProfile/>}/>
               <Route path='verify-email' element={<VerifyEmail/>}/>
+              <Route path='/orders' element={<Protectedroute><SellerOrdersDashboard/></Protectedroute>}/>
 
             </Routes>
           </Router>
