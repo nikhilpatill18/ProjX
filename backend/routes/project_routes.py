@@ -633,7 +633,6 @@ def edit_project(id):
 
 
 # to add the shipping details
-
 @project_bp.route('/shipping-details/<int:project_id>',methods=['POST'])
 @firebaseAuthmiddleware
 def shipping_details(project_id):
@@ -648,4 +647,75 @@ def shipping_details(project_id):
      except Exception as e:
           print(e)
           return jsonify({'message':'server error'}),500
+
+
+@project_bp.route('/shipping-details/<int:project_id>',methods=['PATCH'])
+@firebaseAuthmiddleware
+def update_shippings(project_id):
+     try:
+        #  user=request.user
+         status=request.get_json()['status']
+         print(status)
+         shipping_project=ShippingDetails.query.get(project_id)
+         if not shipping_project:
+              return jsonify({'message':'Project not found'}),200
+         shipping_project.status=status
+         db.session.commit()
+         return jsonify({'message':'updated successfully'}),200 
+     except Exception as e:
+          print(e)
+          return jsonify({'message':'server error'}),500
      
+@project_bp.route('/shipping-details', methods=['GET'])
+@firebaseAuthmiddleware
+def get_shipping_project():
+    try:
+        user = request.user  # logged-in seller
+
+        # Fetch sold hardware projects with shipping, buyer & category
+        results = (
+            db.session.query(Project, HardwareProject, ShippingDetails, Users, Category)
+            .join(HardwareProject, HardwareProject.project_id == Project.id)
+            .join(ShippingDetails, ShippingDetails.project_id == Project.id)
+            .join(Users, Users.user_id == ShippingDetails.user_id)   # buyer info
+            .join(Category, Category.id == Project.category_id)    # category
+            .filter(Project.user_id == user.user_id)                    # seller's projects
+            .filter(Project.status == 'sold')                      # only sold projects
+            .all()
+        )
+
+        data = []
+        for project, hardware, shipping, buyer, category in results:
+            data.append({
+                "project_id": project.id,
+                "title": project.title,
+                "description": project.description,
+                "price": project.price,
+                "complexity": project.complexity,
+                "subject": project.subject,
+                "category": category.name if hasattr(category, "name") else None,
+
+                "hardware_verified": hardware.hardware_verified,
+                "video_url": hardware.video_url,
+
+                "shipping_id": shipping.id,
+                "shipping_address": shipping.shipping_address,
+                "phone_number": shipping.phone_number,
+                "status": shipping.status,
+                "tracking_id": shipping.tracking_id,
+                "courier_name": shipping.courier_name,
+                "order_date": shipping.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+
+                "buyer": {
+                    "id": buyer.user_id,
+                    "name": buyer.full_name ,
+                    "email": buyer.email ,
+                    "username":buyer.username
+                }
+            })
+
+        return jsonify({'message':'success',"data": data}), 200
+
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"message": "Server error"}), 500
