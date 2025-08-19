@@ -17,17 +17,18 @@ import store from './store/Store.js'
 import VerifyEmail from './pages/VerifyEmail.jsx'
 import CompleteProfile from './pages/CompleteProfile.jsx'
 import SellerOrdersDashboard from './pages/SellerProjectDashboard.jsx'
+import ProjXLandingPage from './pages/LandingPage.jsx'
 const App = () => {
   return (
     <div>
       <Provider store={store}>
+          <Router>
         <AuthProvider>
 
-          <Router>
             <Routes>
+              <Route path='/' element={<ProjXLandingPage/>}/>
               <Route path='/signup' element={<Signup />} />
               <Route path='/login' element={<Login />} />
-
               <Route path='/dashboard' element={<Protectedroute><Dashboard /></Protectedroute>} />
               <Route path='/setting' element={<Protectedroute><Setting /></Protectedroute>} />
               <Route path='/profile' element={<Protectedroute><UserProfile /></Protectedroute>} />
@@ -39,8 +40,10 @@ const App = () => {
               <Route path='/orders' element={<Protectedroute><SellerOrdersDashboard/></Protectedroute>}/>
 
             </Routes>
-          </Router>
         </AuthProvider>
+          </Router>
+
+
       </Provider>
 
     </div>

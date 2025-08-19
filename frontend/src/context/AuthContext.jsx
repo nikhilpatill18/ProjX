@@ -6,13 +6,15 @@ import { onAuthStateChanged, getIdToken } from 'firebase/auth'
 import { useDispatch } from 'react-redux'
 import { getProjects } from '../store/projectSlice.js'
 import { getBuyedproject } from '../store/projectSlice.js'
-import { Navigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 const AuthContext = createContext()
 // export const useAuth = () => useContext(AuthContext)
 
 
 export const AuthProvider = ({ children }) => {
+    const navigate=useNavigate()
     const [firebaseuser, setFirebaseuser] = useState(null)
     const [userprofile, setUserprofile] = useState(null)
     const [idtoken, setIdtoken] = useState(null)
@@ -34,8 +36,15 @@ export const AuthProvider = ({ children }) => {
                     dispatch(getProjects())
                     dispatch(getBuyedproject())
                 } catch (error) {
-                    console.log(error);
                     setUserprofile(null)
+                    if(error.response.status==401||error.response.status==404){
+            toast.warning('Please Login again')
+            navigate('/login')
+        }
+        else{
+            toast.error('something went wrong')
+            navigate('/login')
+        }
                 }
             }
             else {
@@ -61,7 +70,14 @@ const fetchUserProfile = async () => {
         dispatch(getProjects())
         dispatch(getBuyedproject())
     } catch (error) {
-        console.error("Failed to fetch user profile:", error)
+        if(error.response.status==401||error.response.status==404){
+            toast.warning('Please Login again')
+            navigate('/login')
+        }
+        else{
+            toast.error('something went wrong')
+            navigate('/login')
+        }
     }
 }
 

@@ -51,6 +51,12 @@ const Sidebar = () => {
             path: '/your-project',
             color: 'text-purple-400'
         },
+         {
+            icon: ListOrderedIcon,
+            label: 'Orders',
+            path: '/orders',
+            color: 'text-gray-400'
+        },
 
         {
             icon: User,
@@ -58,18 +64,13 @@ const Sidebar = () => {
             path: '/profile',
             color: 'text-cyan-400'
         },
-        {
-            icon: Settings,
-            label: 'Settings',
-            path: '/setting',
-            color: 'text-gray-400'
-        },
-        {
-            icon: ListOrderedIcon,
-            label: 'Orders',
-            path: '/orders',
-            color: 'text-gray-400'
-        },
+        // {
+        //     icon: Settings,
+        //     label: 'Settings',
+        //     path: '/setting',
+        //     color: 'text-gray-400'
+        // },
+       
     ]
 
     return (

@@ -22,7 +22,6 @@ const Login = () => {
                 navigate('/dashboard')
             }
         } catch (error) {
-            console.log(error)
             setError('Invalid email or password. Please try again.')
         } finally {
             setLoading(false)
@@ -40,7 +39,6 @@ const Login = () => {
                 navigate('/dashboard')
             }
         } catch (error) {
-            console.log(error)
             setError('Google sign-in failed. Please try again.')
         } finally {
             setLoading(false)
