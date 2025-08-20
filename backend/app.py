@@ -66,8 +66,12 @@ app.register_blueprint(payment_bp, url_prefix='/api/payment')
 
 @app.route('/username', methods=['GET'])
 def usernames():
-    users = Users.query.all()
-    return jsonify({'data': [user.username for user in users]}), 200
+    try:
+
+        users = Users.query.all()
+        return jsonify({'data': [user.username for user in users]}), 200
+    except Exception as e:
+        print(e)
 
 if __name__ == "__main__":
     app.run(debug=True)

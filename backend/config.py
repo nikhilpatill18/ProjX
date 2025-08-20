@@ -10,7 +10,7 @@ class Config:
     if ENV == "production":
         # Supabase connection string
         # Example: postgres://user:password@host:port/dbname
-        SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
+        SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")+"?sslmode=require"
     else:
         # Local SQLite
         SQLALCHEMY_DATABASE_URI = "sqlite:///projecthub.db"
