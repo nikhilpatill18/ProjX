@@ -57,6 +57,10 @@ app.register_blueprint(payment_bp, url_prefix='/api/payment')
 
 #     db.session.add_all([category1, category2])
 #     db.session.commit()
+    # shi=ShippingDetails(id=8,user_id=2,project_id=8,shipping_address='gokul',phone_number=7226052966)
+    # db.session.add(shi)
+    # db.session.commit()
+
 
 #     print("Categories inserted with specific IDs.")
 

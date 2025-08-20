@@ -580,8 +580,8 @@ def buyed_project():
                 software_data=None
         return jsonify({'message':'success','data':result}),200
           
-    except:
-          print("error")
+    except Exception as e:
+          print(e)
      
 
 
@@ -637,6 +637,8 @@ def edit_project(id):
 @firebaseAuthmiddleware
 def shipping_details(project_id):
      try:
+          print(request.form.get('address'))
+          print(request.form.get('phonenumber'))
           user=request.user
           address=request.form.get('address')
           phone_number=request.form.get('phonenumber')
