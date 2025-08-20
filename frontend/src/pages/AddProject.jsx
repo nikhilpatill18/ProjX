@@ -25,7 +25,7 @@ import {
     IndianRupee
 } from 'lucide-react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import axios from '../libs/api'
 import { AuthContext } from '../context/AuthContext'
 import { toast } from 'react-toastify'
 
@@ -98,7 +98,7 @@ const AddProject = () => {
                 formdata.append('images', img)
             })
 
-            const reponse = await axios.post('http://127.0.0.1:5000/api/projects/add-project', formdata, {
+            const reponse = await axios.post('/api/projects/add-project', formdata, {
                 headers: {
                     'Authorization': `Bearer ${idtoken}`
                 }
@@ -148,7 +148,7 @@ const AddProject = () => {
                 formdata.append('images', img)
             })
 
-            const reponse = await axios.post('http://127.0.0.1:5000/api/projects/add-project', formdata, {
+            const reponse = await axios.post('/api/projects/add-project', formdata, {
                 headers: {
                     'Authorization': `Bearer ${idtoken}`
                 }
@@ -185,7 +185,7 @@ const AddProject = () => {
         try {
             if (github_verified) {
                 setanalyze(true)
-                const response = await axios.post('http://127.0.0.1:5000/api/projects/anayze-repo', { 'repo_url': formData.repo_url }, {
+                const response = await axios.post('/api/projects/anayze-repo', { 'repo_url': formData.repo_url }, {
                     headers: {
                         "Content-Type": 'application/json',
                         'Authorization': `Bearer ${idtoken}`
@@ -234,7 +234,7 @@ const AddProject = () => {
                 formdata.append('hardware_images', img)
             })
             console.log(formdata)
-            const response = await axios.post('http://127.0.0.1:5000/api/projects/anayze-hardware', formdata, {
+            const response = await axios.post('/api/projects/anayze-hardware', formdata, {
                 headers: {
                     'Authorization': `Bearer ${idtoken}`
                 }

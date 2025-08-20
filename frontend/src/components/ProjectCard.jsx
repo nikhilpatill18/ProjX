@@ -26,7 +26,7 @@ import {
     Bookmark
 } from 'lucide-react'
 import ProjectDetailsModal from './ProjectDetailsModal'
-import axios from 'axios'
+import axios from '../libs/api'
 import { AuthContext } from '../context/AuthContext'
 import { toast } from 'react-toastify'
 import { useDispatch } from 'react-redux'
@@ -66,7 +66,7 @@ const ProjectCard = ({ project, unlock = false }) => {
     const handleBookmark = async () => {
         if (!isBookmarked) {   // runs when the project is not bookmark
             try {                
-                const response = await axios.get(`http://127.0.0.1:5000/api/bookmark/${project.project_id}`, {
+                const response = await axios.get(`/api/bookmark/${project.project_id}`, {
                     headers: {
                         'Authorization': `Bearer ${idtoken}`
                     }
@@ -90,7 +90,7 @@ const ProjectCard = ({ project, unlock = false }) => {
             try {
                 
                 
-                const response = await axios.delete(`http://127.0.0.1:5000/api/bookmark/${project.project_id}`, {
+                const response = await axios.delete(`/api/bookmark/${project.project_id}`, {
                     headers: {
                         'Authorization': `Bearer ${idtoken}`
                     }

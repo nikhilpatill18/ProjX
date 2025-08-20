@@ -20,11 +20,11 @@ import {
     Download,
     Mail
 } from 'lucide-react'
-// import axios from 'axios' - Remove this for demo purposes
+// import axios from '../libs/api' - Remove this for demo purposes
 import { AuthContext } from '../context/AuthContext'
 import { setloading } from '../store/projectSlice'
 import { toast } from 'react-toastify'
-import axios from 'axios'
+import axios from '../libs/api'
 
 const SellerOrdersDashboard = () => {
     const {idtoken} = useContext(AuthContext)
@@ -42,7 +42,7 @@ const SellerOrdersDashboard = () => {
     const fetchOrders = async () => {
         try {
             // Mock data simulating the API response structure
-            const response=await axios.get('http://127.0.0.1:5000/api/projects/shipping-details',{
+            const response=await axios.get('/api/projects/shipping-details',{
                 headers:{
                     'Authorization':`Bearer ${idtoken}`
                 }
@@ -113,7 +113,7 @@ const SellerOrdersDashboard = () => {
             // TODO: API call to update status
             // await updateOrderStatus(editingOrder, newStatus)
 
-            const response=await axios.patch(`http://127.0.0.1:5000/api/projects/shipping-details/${editingOrder}`,{status:newStatus},{
+            const response=await axios.patch(`/api/projects/shipping-details/${editingOrder}`,{status:newStatus},{
                 headers:{
                     'Authorization':`Bearer ${idtoken}`
                 }

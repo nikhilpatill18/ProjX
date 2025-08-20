@@ -33,12 +33,13 @@ import {
 } from 'lucide-react'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
-import axios from 'axios';
+// import axios from '../libs/api';
 import { AuthContext } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { updateStatus, setloading, clearloading } from '../store/projectSlice';
 import { useDispatch } from 'react-redux';
 import { UpdateProjectStatus } from '../store/projectSlice';
+import axios from '../libs/api'
 
 
 const PaymentModal = ({ project, setShowPayment, setUnlockDetails, shippingDetails }) => {
@@ -57,8 +58,7 @@ const PaymentModal = ({ project, setShowPayment, setUnlockDetails, shippingDetai
             const formdata = new FormData()
             formdata.append('amount', totalamount)
             formdata.append('project_id', projectId)
-            const response = await axios.post(' http://127.0.0.1:5000/api/payment/create-payment-intent', formdata, { headers: { 'Authorization': `Bearer ${idtoken}` } })
-            console.log(response);
+            const response = await axios.post('/api/payment/create-payment-intent', formdata, { headers: { 'Authorization': `Bearer ${idtoken}` } })
             const clientSecret = response.data.clientSecret;
             return clientSecret
 
@@ -72,7 +72,12 @@ const PaymentModal = ({ project, setShowPayment, setUnlockDetails, shippingDetai
 
     const handleShpping= async()=>{
         try {
-           const response=await axios.post(`http://localhost:5000/api/projects/shipping-details/${project.project_id}`,{address:shippingDetails.address,phonenumber:shippingDetails.phone},{
+            console.log(shippingDetails.address);
+            console.log(shippingDetails.phone);
+            const formData=new FormData()
+            formData.append('address',shippingDetails.address)
+            formData.append('phonenumber',shippingDetails.phone)
+           const response=await axios.post(`http://localhost:5000/api/projects/shipping-details/${project.project_id}`,formData,{
             headers:{
                 'Authorization':`Bearer ${idtoken}`
             }
@@ -83,8 +88,6 @@ const PaymentModal = ({ project, setShowPayment, setUnlockDetails, shippingDetai
             
         } catch (error) {
             console.log(error);
-            
-            
         }
     }
     const handlePayement = async () => {
@@ -100,11 +103,12 @@ const PaymentModal = ({ project, setShowPayment, setUnlockDetails, shippingDetai
                     payment_intent_id: result.paymentIntent.id,
                     status: "succeeded",
                 });
-                handleShpping
+                handleShpping()
+                setShowPayment(false)
+                toast.success('Payment successFull')
+                setUnlockDetails(true)
                 dispatch(updateStatus(project.project_id))
                 dispatch(UpdateProjectStatus(project.project_id))
-                setUnlockDetails(true)
-                setShowPayment(false)
             }
             else {
                 toast.error('Failed  the payment details')

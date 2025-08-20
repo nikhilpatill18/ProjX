@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom'
 import { AuthContext } from '../context/AuthContext'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements } from '@stripe/react-stripe-js'
-import axios from 'axios'
+import axios from '../libs/api'
 import {
     IndianRupee,
     Code,

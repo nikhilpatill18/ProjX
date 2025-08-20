@@ -12,7 +12,7 @@ import {
     CheckCircle,
     Divide,
 } from 'lucide-react'
-import axios from 'axios'
+import axios from '../libs/api'
 import { AuthContext } from '../context/AuthContext'
 import { toast } from 'react-toastify'
 import ProjectCard from '../components/ProjectCard'
@@ -41,6 +41,8 @@ const ProjectsPage = () => {
 
     useEffect(() => {
         if (!loading) {
+            console.log("realoadint he project");
+            
             setProjects(projectData)
             setFilteredProjects(projectData)
         }
@@ -52,7 +54,7 @@ const ProjectsPage = () => {
         console.log('filter project');
 
         if (searchTerm.trim() !== '') {
-            const response = await axios.get(`http://127.0.0.1:5000/api/projects/searchproject?search=${searchTerm}`, {
+            const response = await axios.get(`/api/projects/searchproject?search=${searchTerm}`, {
                 headers: {
                     'Authorization': `Bearer ${idtoken}`
                 }

@@ -2,7 +2,7 @@ import React, { useEffect, useState,useContext } from 'react'
 import { Upload, Mail, Lock, User, UserCheck, Eye, EyeOff, Chrome } from 'lucide-react'
 import { auth } from '../libs/Firebase.js'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from 'firebase/auth'
-import axios from 'axios'
+import axios from '../libs/api'
 import {useNavigate} from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { AuthContext } from '../context/AuthContext.jsx'
@@ -25,7 +25,7 @@ const Signup = () => {
     useEffect(() => {
         const fetchUsernames = async () => {
             try {
-                const response = await axios.get('http://127.0.0.1:5000/username')
+                const response = await axios.get('/username')
                 setUsernames(response.data.data || [])
             } catch (error) {
                 console.error('Failed to fetch usernames:', error)
@@ -63,7 +63,7 @@ const Signup = () => {
             userCred = await signInWithPopup(auth, provider)
             const idToken = await userCred.user.getIdToken()
             localStorage.setItem('idtoken',idToken)
-            const response = await axios.get('http://127.0.0.1:5000/api/auth/register', {
+            const response = await axios.get('/api/auth/register', {
                 headers: { Authorization: `Bearer ${idToken}` }
             })
             
@@ -90,7 +90,7 @@ const Signup = () => {
             userCred = await createUserWithEmailAndPassword(auth, form.email, form.password)
             const idToken = await userCred.user.getIdToken()
             localStorage.setItem('idtoken',idToken)
-            const response = await axios.get('http://127.0.0.1:5000/api/auth/register', {
+            const response = await axios.get('/api/auth/register', {
                 headers: { 'Authorization': `Bearer ${idToken}` }
             })
             if (response.status === 200) {

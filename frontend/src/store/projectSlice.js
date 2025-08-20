@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
-import axios from 'axios'
+import axios from '../libs/api'
 import { useContext } from 'react'
 
 const initialState = {
@@ -84,7 +84,7 @@ export function getProjects() {
         const idtoken = localStorage.getItem('idtoken')
         try {
             dispatch(setloading())
-            const response = await axios.get('http://127.0.0.1:5000/api/projects/getproject', {
+            const response = await axios.get('/api/projects/getproject', {
                 headers: {
                     'Authorization': `Bearer ${idtoken}`
                 }
@@ -106,7 +106,7 @@ export function UpdateProjectStatus(projectId) {
     const idtoken = localStorage.getItem('idtoken')
     return async function UpdateProjectStatusThunk(dispatch, getstate) {
         try {
-            const response = await axios.put(`http://127.0.0.1:5000/api/projects/${projectId}/mark-sold`, {}, {
+            const response = await axios.put(`/api/projects/${projectId}/mark-sold`, {}, {
             headers: {
                 'Authorization': `Bearer ${idtoken}`
             }
@@ -132,7 +132,7 @@ export function getBuyedproject() {
         const idtoken = localStorage.getItem('idtoken')
         dispatch(setloading())
         try {
-                const response = await axios.get('http://127.0.0.1:5000/api/projects/buyed-project', {
+                const response = await axios.get('/api/projects/buyed-project', {
                     headers: {
                         'Authorization': `Bearer ${idtoken}`
                     }

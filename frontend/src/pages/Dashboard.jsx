@@ -12,7 +12,7 @@ import {
     User,
     Check
 } from 'lucide-react'
-import axios from 'axios'
+import axios from '../libs/api'
 import { useSelector } from 'react-redux'
 import MyProjectCard from '../components/MyProject'
 import History from '../components/History'
@@ -39,7 +39,7 @@ const Dashboard = () => {
     const fetchProjects = async () => {
         // setLoading(true)
         try {
-            const response = await axios.get('http://127.0.0.1:5000/api/projects/userprojects', { headers: { 'Authorization': `Bearer ${idtoken}` } })
+            const response = await axios.get('/api/projects/userprojects', { headers: { 'Authorization': `Bearer ${idtoken}` } })
             console.log(response.data.data);
             setmyproject(response.data.data)
             setProjects(response.data.data || [])
@@ -50,7 +50,7 @@ const Dashboard = () => {
     }
     const fetchHistoy= async()=>{
         try {
-            const response = await axios.get('http://127.0.0.1:5000/api/payment/gethistory', { headers: { 'Authorization': `Bearer ${idtoken}` } })
+            const response = await axios.get('/api/payment/gethistory', { headers: { 'Authorization': `Bearer ${idtoken}` } })
             if(response.status==200){
                 sethistory(response.data.data)
             }
@@ -125,7 +125,7 @@ const Dashboard = () => {
                                      </span>
   ) : (
     <NavLink
-      to={`http://127.0.0.1:5000/api/auth/github/login?idtoken=${idtoken}`}
+      to={`/api/auth/github/login?idtoken=${idtoken}`}
       className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105"
     >
       <Plus className="w-5 h-5" />

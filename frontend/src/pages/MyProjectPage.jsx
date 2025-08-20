@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { AuthContext } from '../context/AuthContext'
-import axios from 'axios'
+import axios from '../libs/api'
 import {
     ArrowLeft,
     IndianRupee,
@@ -59,7 +59,7 @@ const MyProjectPage = () => {
     const fetchProject = async () => {
         setLoading(true)
         try {
-            const response = await axios.get(`http://127.0.0.1:5000/api/projects/projectdetails/${projectId}`, {
+            const response = await axios.get(`/api/projects/projectdetails/${projectId}`, {
                 headers: { 'Authorization': `Bearer ${idtoken}` }
             })
             setProject(response.data.data)
@@ -77,7 +77,7 @@ const MyProjectPage = () => {
 
     const handleDelete = async () => {
         try {
-          const response=  await axios.delete(`http://127.0.0.1:5000/api/projects/${projectId}`, {
+          const response=  await axios.delete(`/api/projects/${projectId}`, {
                 headers: { 'Authorization': `Bearer ${idtoken}` }
             })
 
@@ -101,7 +101,7 @@ const MyProjectPage = () => {
             formData.append('price',formdata.price)
             formData.append('duration_hours',formdata.duration_hours)
 
-            const response=await axios.put(`http://127.0.0.1:5000/api/projects/${projectId}`,formData,{
+            const response=await axios.put(`/api/projects/${projectId}`,formData,{
                 headers:{
                     'Authorization':`Bearer ${idtoken}`
                 }

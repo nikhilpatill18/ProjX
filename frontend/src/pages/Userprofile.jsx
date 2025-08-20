@@ -20,7 +20,7 @@ import {
     IndianRupee,
     ExternalLink
 } from 'lucide-react'
-import axios from 'axios'
+import axios from '../libs/api'
 
 const UserProfile = () => {
     const { idtoken, userprofile, setUserProfile: setContextUserProfile } = useContext(AuthContext)
@@ -75,7 +75,7 @@ const UserProfile = () => {
                 username: editForm.username
             }
             
-            const response = await axios.put('http://127.0.0.1:5000/api/user/profile', updateData, {
+            const response = await axios.put('/api/user/profile', updateData, {
                 headers: {
                     'Authorization': `Bearer ${idtoken}`,
                     'Content-Type': 'application/json'
@@ -112,7 +112,7 @@ const UserProfile = () => {
         try {
             // Redirect to GitHub OAuth or verification endpoint
             // This would typically redirect to your backend GitHub OAuth endpoint
-            window.location.href = 'http://127.0.0.1:5000/api/auth/github/verify'
+            window.location.href = '/api/auth/github/verify'
         } catch (error) {
             console.error('Failed to initiate GitHub verification:', error)
             alert('Failed to start GitHub verification. Please try again.')

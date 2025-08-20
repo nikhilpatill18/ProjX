@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { Upload, User, UserCheck, School, Save, ArrowLeft } from 'lucide-react'
 import { auth } from '../libs/Firebase'
-import axios from 'axios'
+import axios from '../libs/api'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { AuthContext } from '../context/AuthContext'
@@ -22,7 +22,7 @@ const CompleteProfile = () => {
     useEffect(() => {
         const fetchUsernames = async () => {
             try {
-                const response = await axios.get('http://127.0.0.1:5000/username')
+                const response = await axios.get('/username')
                 setUsernames(response.data.data || [])
             } catch (error) {
                 console.error('Failed to fetch usernames:', error)
@@ -70,7 +70,7 @@ const CompleteProfile = () => {
                 formData.append('profile_photo', profilePhoto)
             }
 
-            const response = await axios.post('http://127.0.0.1:5000/api/auth/complete-profile', formData, {
+            const response = await axios.post('/api/auth/complete-profile', formData, {
                 headers: { 
                     'Authorization': `Bearer ${idToken}`,
                 }
