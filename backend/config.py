@@ -4,6 +4,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        'DATABASE_URL', 'sqlite:///projecthub.db'
+    )
     GITHUB_CLIENT_ID = os.environ.get('CLIENT_ID')
     GITHUB_CLIENT_SECRET = os.environ.get('CLIENT_SECRET_ID')
     CLOUD_NAME=os.environ.get('CLOUD_NAME')

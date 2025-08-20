@@ -6,3 +6,5 @@ instance/
 ./servicekey.json
 servicekey.json/
 servicekey.json
+.env.production
+.env.development

@@ -25,8 +25,6 @@ from models.shippingdeatils import ShippingDetails
 app = Flask(__name__)
 app.config.from_object(Config)
 app.config['SECRET_KEY'] = 'nikhillll18'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///projecthub.db'
-
 db.init_app(app)
 migrate = Migrate(app, db)
 CORS(app)
