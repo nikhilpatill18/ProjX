@@ -125,7 +125,7 @@ const Dashboard = () => {
                                      </span>
   ) : (
     <NavLink
-      to={`${import.meta.env.VITE_GITHUB_VERIFY}?idtoken=${idtoken}`}
+      to={`https://projx-yncz.onrender.com/api/auth/github/login?idtoken=${idtoken}`}
       className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105"
     >
       <Plus className="w-5 h-5" />
