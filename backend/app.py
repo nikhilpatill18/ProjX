@@ -45,24 +45,25 @@ app.register_blueprint(payment_bp, url_prefix='/api/payment')
 
 # with app.app_context():
 #     # Delete all existing categories if needed
-#     db.session.query(Project).delete()
-#     db.session.query(SoftwareProject).delete()
-#     db.session.query(HardwareProject).delete()
-#     db.session.query(ProjectImage).delete()
-#     db.session.query(Category).delete()
-#     db.session.query(Bookmark).delete()
-#     db.session.query(Payment).delete()
-#     db.session.query(Users).delete()
+    # db.session.query(Project).delete()
+    # db.session.query(SoftwareProject).delete()
+    # db.session.query(HardwareProject).delete()
+    # db.session.query(ProjectImage).delete()
+    # db.session.query(Category).delete()
+    # db.session.query(Bookmark).delete()
+    # db.session.query(Payment).delete()
+    # db.session.query(Users).delete()
+    # db.session.query(ShippingDetails).delete()
 #     db.session.commit()
 
 #     # Manually insert categories with specific IDs
-#     category1 = Category(id=1, name="SOFTWARE")
-#     category2 = Category(id=2, name="HARDWARE")
+    # category1 = Category(id=1, name="SOFTWARE")
+    # category2 = Category(id=2, name="HARDWARE")
 
-#     db.session.add_all([category1, category2])
-#     db.session.commit()
+    # db.session.add_all([category1, category2])
+    # db.session.commit()
     # shi=ShippingDetails(id=8,user_id=2,project_id=8,shipping_address='gokul',phone_number=7226052966)
-    # db.session.add(shi)
+    #     # db.session.add(shi)
     # db.session.commit()
 
 

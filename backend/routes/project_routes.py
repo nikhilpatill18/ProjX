@@ -123,9 +123,10 @@ def anaylze_repo():
         user=request.user
         # print(user.github_username)
         print(request.get_json())
+        print(request.form)
         repo_url=request.get_json()['repo_url']
         if len(repo_url)==0:
-               jsonify({'message':'Please enter the url'}),404
+               return jsonify({'message':'Please enter the url'}),404
         print(repo_url.rstrip('/').split('/'))
         repo_name=repo_url.rstrip('/').split('/')[-1]
         repo_api_url=f"https://api.github.com/repos/{user.github_username}/{repo_name}"
@@ -134,7 +135,7 @@ def anaylze_repo():
         if(repo_response.status_code!=200):
                return jsonify({'message':'repo not exits'}),404
         #   get readme file
-        readme_api_url = f"https://api.github.com/repos/{'nikhilpatill18'}/{repo_name}/readme"
+        readme_api_url = f"https://api.github.com/repos/{user.github_username}/{repo_name}/readme"
         readme_response = requests.get(readme_api_url)
         if readme_response.status_code!=200:
                jsonify({'message':'please enter the readme.md file in repo'}),404
@@ -282,9 +283,12 @@ def getProject():
                 owner_data=Users.query.filter_by(user_id=project.user_id).first()
                 category=Category.query.filter_by(id=project.category_id).first()
                 category_name=category.name if category else None
+                print(category_name)
+                hardware_data=None
+                software_data=None
                 if category_name=='SOFTWARE':
                      software_project=SoftwareProject.query.filter_by(project_id=project.id).first()
-                     software_data=None
+                     
                      if software_project:
                           software_data={
                                'readme_verified': software_project.readme_verified,
@@ -294,12 +298,13 @@ def getProject():
                           }
                 else:
                      hardware_project=HardwareProject.query.filter_by(project_id=project.id).first()
-                     hardware_data=None
+                     
                      if hardware_project:
                           hardware_data={
                                 'video_url': hardware_project.video_url,
                                 'hardware_verified': hardware_project.hardware_verified,
                           }
+                
                 project_data=software_data if hardware_data==None else hardware_data
                 result.append({
                 'project_id': project.id,
@@ -315,13 +320,14 @@ def getProject():
                 'status': project.status,
                 'bookedmarked':project.id in bookmark_ids,
                 'author':{
-                     'avatar':owner_data.profile_photo,
+                    #  'avatar':owner_data.profile_photo,
                      'name':owner_data.full_name,
                      'email':owner_data.email,
                      'username':owner_data.username
                 },
                 'created_at':project.created_at
                 })
+        print(result)
         return jsonify({'message':'done','data':result})
     except  Exception:
          print(Exception)
