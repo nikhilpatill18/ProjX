@@ -77,7 +77,7 @@ const PaymentModal = ({ project, setShowPayment, setUnlockDetails, shippingDetai
             const formData=new FormData()
             formData.append('address',shippingDetails.address)
             formData.append('phonenumber',shippingDetails.phone)
-           const response=await axios.post(`http://localhost:5000/api/projects/shipping-details/${project.project_id}`,formData,{
+           const response=await axios.post(`/api/projects/shipping-details/${project.project_id}`,formData,{
             headers:{
                 'Authorization':`Bearer ${idtoken}`
             }
@@ -99,7 +99,7 @@ const PaymentModal = ({ project, setShowPayment, setUnlockDetails, shippingDetai
                 }
             })
             if (result.paymentIntent.status === 'succeeded') {
-                await axios.post("http://localhost:5000/api/payment/update-status", {
+                await axios.post("/api/payment/update-status", {
                     payment_intent_id: result.paymentIntent.id,
                     status: "succeeded",
                 });
@@ -140,7 +140,7 @@ const PaymentModal = ({ project, setShowPayment, setUnlockDetails, shippingDetai
                 console.error(result.error.message);
                 alert("Payment failed: " + result.error.message);
             } else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
-                await axios.post('http://localhost:5000/api/payment/update-status', {
+                await axios.post('/api/payment/update-status', {
                     payment_intent_id: result.paymentIntent.id,
                     status: 'succeeded',
                 });
