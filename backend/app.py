@@ -1,31 +1,37 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_migrate import Migrate
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
-from config import Config
+from config import DevelopmentConfig,ProductionConfig
 from models import db
 from routes.auth_routes import auth_user 
 from routes.project_routes import project_bp
 from routes.bookmark_routes import bookmark_bp
 from routes.payment_routes import payment_bp
 
-# Import all models so Migrate can detect them
+# Import models so Migrate can detect them
 from models.category import Category
 from models.bookmark import Bookmark
 from models.message import Message
-from models.Project import Project
+from models.Project import Project, SoftwareProject, HardwareProject
 from models.review import Review
 from models.users import Users
 from models.payment import Payment
 from models.projectImages import ProjectImage
-from models.Project import SoftwareProject,HardwareProject
-from models.projectImages import ProjectImage
 from models.shippingdeatils import ShippingDetails
+from sqlalchemy import create_engine
+
 
 app = Flask(__name__)
-app.config.from_object(Config)
-app.config['SECRET_KEY'] = 'nikhillll18'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///projecthub.db'
+
+# Pick config based on FLASK_ENV
+if os.getenv("FLASK_ENV") == "production":
+        app.config.from_object(ProductionConfig)
+else:
+        app.config.from_object(DevelopmentConfig)
 
 db.init_app(app)
 migrate = Migrate(app, db)
@@ -36,8 +42,6 @@ app.register_blueprint(auth_user, url_prefix='/api/auth')
 app.register_blueprint(project_bp, url_prefix='/api/projects')
 app.register_blueprint(bookmark_bp, url_prefix='/api/bookmark')
 app.register_blueprint(payment_bp, url_prefix='/api/payment')
-
-
 
 # with app.app_context():
 #     # Delete all existing categories if needed
@@ -64,14 +68,16 @@ app.register_blueprint(payment_bp, url_prefix='/api/payment')
 
 #     print("Categories inserted with specific IDs.")
 
+
 @app.route('/username', methods=['GET'])
 def usernames():
     try:
-
         users = Users.query.all()
         return jsonify({'data': [user.username for user in users]}), 200
     except Exception as e:
         print(e)
+        return jsonify({'error': str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
