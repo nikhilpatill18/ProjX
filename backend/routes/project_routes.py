@@ -18,6 +18,9 @@ from models.payment import Payment
 from models.bookmark import Bookmark
 from models.users import Users
 from models.shippingdeatils import ShippingDetails
+from dotenv import load_dotenv
+import os
+load_dotenv()
 project_bp=Blueprint('/api/projects',__name__)
 cloudinary.config(
     cloud_name= 'dwg1z2iih',
@@ -120,6 +123,7 @@ def analyze_image():
 @firebaseAuthmiddleware
 def anaylze_repo():
      try:
+        headers = {"Authorization": f"token {os.getenv('GITHUB_TOKEN')}"}
         user=request.user
         # print(user.github_username)
         print(request.get_json())
@@ -130,13 +134,13 @@ def anaylze_repo():
         print(repo_url.rstrip('/').split('/'))
         repo_name=repo_url.rstrip('/').split('/')[-1]
         repo_api_url=f"https://api.github.com/repos/{user.github_username}/{repo_name}"
-        repo_response=requests.get(repo_api_url)
+        repo_response=requests.get(repo_api_url,headers=headers)
         print(repo_response.status_code)
         if(repo_response.status_code!=200):
                return jsonify({'message':'repo not exits'}),404
         #   get readme file
         readme_api_url = f"https://api.github.com/repos/{user.github_username}/{repo_name}/readme"
-        readme_response = requests.get(readme_api_url)
+        readme_response = requests.get(readme_api_url,headers=headers)
         if readme_response.status_code!=200:
                jsonify({'message':'please enter the readme.md file in repo'}),404
         readme_data = readme_response.json()
