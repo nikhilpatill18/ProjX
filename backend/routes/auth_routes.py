@@ -328,4 +328,4 @@ def github_callback():
     print('github login verify sussfully')
 
     # Redirect user back to frontend profile page
-    return redirect("http://localhost:5173/dashboard")
+    return redirect("https://projx-yncz.onrender.com")
