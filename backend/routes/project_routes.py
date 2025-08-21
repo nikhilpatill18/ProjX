@@ -543,9 +543,11 @@ def buyed_project():
                 category=Category.query.filter_by(id=project.category_id).first()
                 category_name=category.name if category else None
                 owner_data=Users.query.filter_by(user_id=project.user_id).first()
+                software_data=None
+                hardware_data=None
                 if category_name=='SOFTWARE':
                      software_project=SoftwareProject.query.filter_by(project_id=project.id).first()
-                     software_data=None
+                     
                      if software_project:
                           software_data={
                                'readme_verified': software_project.readme_verified,
@@ -554,7 +556,7 @@ def buyed_project():
                           }
                 else:
                      hardware_project=HardwareProject.query.filter_by(project_id=project.id).first()
-                     hardware_data=None
+                     
                      shipping_details=ShippingDetails.query.filter_by(project_id=project.id).first()
                      if hardware_project:
                           hardware_data={
