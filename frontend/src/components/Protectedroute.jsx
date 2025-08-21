@@ -33,8 +33,12 @@ const Protectedroute = ({ children }) => {
     },[])
     if (loading|| checking) return <div><LoadingComponent message='loading'/></div>
     if (!firebaseuser) return <Navigate to={'/login'} />
-    if(!userprofile.IsprofileCompletd) return <Navigate to={'/complete-profile'}/>
+    if(firebaseuser &&!userprofile){
+      return <LoadingComponent message='fetching your details'/>
+    }
+    if(!(userprofile.IsprofileCompletd)) return <Navigate to={'/complete-profile'}/>
     if(!isAllowed)return <Navigate to={'/verify-email'} />
+    
     
     return (
         <div className='flex h-screen '>

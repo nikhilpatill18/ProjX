@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }) => {
                     setFirebaseuser(user)
                     dispatch(getProjects())
                     dispatch(getBuyedproject())
+                    setloading(false)
                 } catch (error) {
                     setUserprofile(null)
                     if(error.response.status==401||error.response.status==404){
@@ -67,6 +68,7 @@ const fetchUserProfile = async () => {
         localStorage.setItem('idtoken', token)
         setUserprofile(response.data.data)
         setIdtoken(token)
+        setloading(false)
         dispatch(getProjects())
         dispatch(getBuyedproject())
     } catch (error) {
