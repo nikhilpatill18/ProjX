@@ -135,8 +135,8 @@ def complete_profile():
 def me():
     try:
         user=request.user
-        buyedProject=Payment.query.filter_by(buyer_id=user.user_id).count()
-        soldProject=db.session.query(Project,Payment).join(Project,Project.id==Payment.project_id).filter(Project.user_id==user.user_id).count()
+        buyedProject=Payment.query.filter_by(buyer_id=user.user_id,status='succeeded').count()
+        soldProject=db.session.query(Project,Payment).join(Project,Project.id==Payment.project_id).filter(Project.user_id==user.user_id,Payment.status=='succeeded').count()
         total_paymentreceived=db.session.query(func.sum(Payment.amount)).join(Project,Project.id==Payment.project_id).filter(Payment.status=='succeeded',Project.user_id==user.user_id).scalar()
         return jsonify({'message':'success','data':{
             'user_id':user.user_id,
