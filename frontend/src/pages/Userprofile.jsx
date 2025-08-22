@@ -1,26 +1,24 @@
 import React, { useState, useEffect, useContext } from 'react'
 import { AuthContext } from '../context/AuthContext'
 import {
-    User,
     Mail,
     Calendar,
     Github,
     Edit,
     Save,
     X,
-    Camera,
     Shield,
     CheckCircle,
     AlertCircle,
     Settings,
-    MapPin,
     Briefcase,
-    DollarSign,
     ShoppingCart,
     IndianRupee,
-    ExternalLink
+    ExternalLink,Upload
 } from 'lucide-react'
 import axios from '../libs/api'
+import { NavLink } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 const UserProfile = () => {
     const { idtoken, userprofile, setUserProfile: setContextUserProfile } = useContext(AuthContext)
@@ -31,6 +29,12 @@ const UserProfile = () => {
     const [loading, setLoading] = useState(false)
     const [saving, setSaving] = useState(false)
     const [verifyingGithub, setVerifyingGithub] = useState(false)
+    const [usernames, setUsernames] = useState([])
+    const [isUsernameAvailable, setIsUsernameAvailable] = useState(true)
+    const [previewImage, setPreviewImage] = useState(null)
+    const [profilePhoto, setProfilePhoto] = useState(null)
+    const [currentProfileImage, setCurrentProfileImage] = useState(userProfile.profile_photo?userProfile.profile_photo:`https://ui-avatars.com/api/?name=${userProfile.email}&background=0D8ABC&color=fff`)
+    
 
     useEffect(() => {
         if (userprofile) {
@@ -41,7 +45,17 @@ const UserProfile = () => {
             })
         }
     }, [userprofile])
-
+    useEffect(() => {
+            const fetchUsernames = async () => {
+                try {
+                    const response = await axios.get('/username')
+                    setUsernames(response.data.data || [])
+                } catch (error) {
+                    console.error('Failed to fetch usernames:', error)
+                }
+            }
+            fetchUsernames()
+        }, [])
     const handleEditToggle = () => {
         if (isEditing) {
             // Reset form if canceling
@@ -64,30 +78,51 @@ const UserProfile = () => {
             ...prev,
             [field]: value
         }))
+        if(userProfile.username==value){
+            setIsUsernameAvailable(true)
+            return
+        }
+        if (field === 'username') {
+            setIsUsernameAvailable(!usernames.includes(value))
+        }
+    }
+    const handleFileChange = (e) => {
+        const file = e.target.files[0]
+        setProfilePhoto(file)
+        if (file) {
+            const reader = new FileReader()
+            reader.onload = (e) => setPreviewImage(e.target.result)
+            reader.readAsDataURL(file)
+        } else {
+            setPreviewImage(null)
+        }
     }
 
     const handleSaveProfile = async () => {
         setSaving(true)
         try {
             // Map form data back to API expected format
-            const updateData = {
-                full_name: editForm.full_name,
-                username: editForm.username
+            const formData=new FormData()
+            formData.append('full_name',editForm.full_name)
+            formData.append('username',editForm.username)
+            if(profilePhoto){
+                formData.append('profile_photo',profilePhoto)
             }
+
             
-            const response = await axios.put('/api/user/profile', updateData, {
+            const response = await axios.post('/api/auth/updateProfile', formData, {
                 headers: {
                     'Authorization': `Bearer ${idtoken}`,
-                    'Content-Type': 'application/json'
                 }
             })
+            console.log(response);
             
             // Update userProfile with the response data
             const updatedProfile = {
                 ...userProfile,
-                full_name: response.data.data.fullname || response.data.data.full_name,
-                fullname: response.data.data.fullname || response.data.data.full_name,
-                username: response.data.data.username
+                full_name: response.data.data.full_name,
+                username: response.data.data.username,
+                profile_phtot:response.data.data.profile_photo
             }
             
             setUserProfile(updatedProfile)
@@ -98,7 +133,9 @@ const UserProfile = () => {
             }
             
             setIsEditing(false)
+            toast.success('profile updatedd success fully')
         } catch (error) {
+            console.log(error);
             console.error('Failed to update profile:', error)
             // You might want to show an error message to the user here
             alert('Failed to update profile. Please try again.')
@@ -107,32 +144,18 @@ const UserProfile = () => {
         }
     }
 
-    const handleVerifyGithub = async () => {
-        setVerifyingGithub(true)
-        try {
-            // Redirect to GitHub OAuth or verification endpoint
-            // This would typically redirect to your backend GitHub OAuth endpoint
-            window.location.href = '/api/auth/github/verify'
-        } catch (error) {
-            console.error('Failed to initiate GitHub verification:', error)
-            alert('Failed to start GitHub verification. Please try again.')
-        } finally {
-            setVerifyingGithub(false)
-        }
-    }
-
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 p-6">
+            <div className="min-h-screen bg-gray-900 p-4 sm:p-6">
                 <div className="max-w-4xl mx-auto">
                     <div className="animate-pulse">
-                        <div className="bg-gray-800 rounded-xl p-8 mb-8">
-                            <div className="flex items-center space-x-6">
+                        <div className="bg-gray-800 rounded-xl p-6 sm:p-8 mb-8">
+                            <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-6">
                                 <div className="w-32 h-32 bg-gray-700 rounded-full"></div>
-                                <div className="flex-1">
-                                    <div className="h-8 bg-gray-700 rounded mb-4 w-1/3"></div>
-                                    <div className="h-4 bg-gray-700 rounded mb-2 w-1/2"></div>
-                                    <div className="h-4 bg-gray-700 rounded w-1/4"></div>
+                                <div className="flex-1 text-center lg:text-left">
+                                    <div className="h-8 bg-gray-700 rounded mb-4 w-2/3 mx-auto lg:mx-0"></div>
+                                    <div className="h-4 bg-gray-700 rounded mb-2 w-1/2 mx-auto lg:mx-0"></div>
+                                    <div className="h-4 bg-gray-700 rounded w-1/4 mx-auto lg:mx-0"></div>
                                 </div>
                             </div>
                         </div>
@@ -143,61 +166,80 @@ const UserProfile = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
-            <div className="max-w-4xl mx-auto">
+        <div className="min-h-screen bg-gray-900 p-4 sm:p-6">
+               <div className="max-w-4xl mx-auto">
                 {/* Profile Header */}
-                <div className="bg-gray-800 border border-gray-700 rounded-xl p-8 mb-8">
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6">
-                        <div className="flex items-center space-x-6 mb-4 lg:mb-0">
+                <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 sm:p-8 mb-8">
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6 space-y-6 lg:space-y-0">
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 w-full lg:w-auto">
                             <div className="relative">
-                                <div className="w-32 h-32 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center overflow-hidden">
-                                    {userProfile.profile_photo ? (
-                                        <img
-                                            src={userProfile.profile_photo}
-                                            alt="Profile"
-                                            className="w-full h-full object-cover"
-                                        />
+                                <div className="mb-6 flex justify-center">
+                        <div className="relative group">
+                            <div className="w-24 h-24 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 p-0.5 shadow-lg">
+                                <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center overflow-hidden group-hover:bg-gray-600 transition-colors">
+                                    {previewImage ? (
+                                        <img src={previewImage} alt="Preview" className="w-full h-full object-cover" />
+                                    ) : currentProfileImage ? (
+                                        <img src={currentProfileImage} alt="Current" className="w-full h-full object-cover" />
                                     ) : (
-                                        <User className="w-16 h-16 text-white" />
+                                        <Upload className="w-8 h-8 text-gray-400 group-hover:text-gray-300" />
                                     )}
                                 </div>
+                            </div>
+                        </div>
+                    </div>
                                 {isEditing && (
-                                    <button className="absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full transition-colors">
-                                        <Camera className="w-4 h-4" />
-                                    </button>
+                                    <>
+                                     <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                                <Upload className="w-3 h-3 text-white" />
+                            </div>
+                                </>
                                 )}
                             </div>
 
-                            <div>
+                            <div className="text-center sm:text-left">
                                 {isEditing ? (
+                                    
                                     <div className="space-y-3">
+                                        
                                         <input
                                             type="text"
                                             value={editForm.full_name || ''}
                                             onChange={(e) => handleInputChange('full_name', e.target.value)}
-                                            className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             placeholder="Full Name"
                                         />
                                         <input
                                             type="text"
                                             value={editForm.username || ''}
                                             onChange={(e) => handleInputChange('username', e.target.value)}
-                                            className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             placeholder="Username"
                                         />
+                                        {editForm.username && (
+                                <p className={`text-sm mt-1 pl-2 ${isUsernameAvailable ? 'text-green-400' : 'text-red-400'}`}>
+                                    {isUsernameAvailable ? 'Username is available' : 'Username is taken'}
+                                </p>
+                            )}
                                     </div>
                                 ) : (
                                     <>
-                                        <h1 className="text-3xl font-bold text-white mb-2">
-                                            {userProfile.full_name || userProfile.fullname || userProfile.username}
+                                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 break-words">
+                                            {userProfile.full_name}
                                         </h1>
-                                        <p className="text-gray-400 mb-2">@{userProfile.username}</p>
-                                        <div className="flex items-center space-x-4 text-sm text-gray-400">
-                                            <div className="flex items-center space-x-1">
+                                        <p className="text-gray-400 mb-2 break-words">@{userProfile.username}</p>
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0 text-sm text-gray-400">
+                                            <div className="flex items-center space-x-1 justify-center sm:justify-start">
                                                 <Mail className="w-4 h-4" />
-                                                <span>{userProfile.email}</span>
+                                                <span className="break-all">{userProfile.email}</span>
                                             </div>
-                                            <div className="flex items-center space-x-1">
+                                            <div className="flex items-center space-x-1 justify-center sm:justify-start">
                                                 <Calendar className="w-4 h-4" />
                                                 <span>Joined {new Date(userProfile.created_at).toLocaleDateString()}</span>
                                             </div>
@@ -207,13 +249,13 @@ const UserProfile = () => {
                             </div>
                         </div>
 
-                        <div className="flex items-center space-x-3">
+                        <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-3 w-full lg:w-auto">
                             {isEditing ? (
                                 <>
                                     <button
                                         onClick={handleSaveProfile}
-                                        disabled={saving}
-                                        className="flex items-center space-x-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        disabled={!isUsernameAvailable||saving}
+                                        className="w-full sm:w-auto flex items-center justify-center space-x-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <Save className="w-4 h-4" />
                                         <span>{saving ? 'Saving...' : 'Save'}</span>
@@ -221,7 +263,7 @@ const UserProfile = () => {
                                     <button
                                         onClick={handleEditToggle}
                                         disabled={saving}
-                                        className="flex items-center space-x-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                                        className="w-full sm:w-auto flex items-center justify-center space-x-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50"
                                     >
                                         <X className="w-4 h-4" />
                                         <span>Cancel</span>
@@ -230,7 +272,7 @@ const UserProfile = () => {
                             ) : (
                                 <button
                                     onClick={handleEditToggle}
-                                    className="flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                                    className="w-full sm:w-auto flex items-center justify-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
                                 >
                                     <Edit className="w-4 h-4" />
                                     <span>Edit Profile</span>
@@ -242,11 +284,11 @@ const UserProfile = () => {
                     {/* GitHub Verification Section */}
                     <div className="mt-6">
                         {userProfile.github_username ? (
-                            <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-700 rounded-lg space-y-3 sm:space-y-0">
                                 <div className="flex items-center space-x-3">
                                     <Github className="w-5 h-5 text-gray-300" />
                                     <div>
-                                        <span className="text-gray-300">GitHub: @{userProfile.github_username}</span>
+                                        <span className="text-gray-300 break-words">GitHub: @{userProfile.github_username}</span>
                                         {userProfile.github_verified ? (
                                             <div className="flex items-center space-x-1 text-green-400 mt-1">
                                                 <CheckCircle className="w-4 h-4" />
@@ -258,21 +300,20 @@ const UserProfile = () => {
                                                 <span className="text-sm">Not Verified</span>
                                             </div>
                                         )}
-                                    </div>
+                                    </div>  
                                 </div>
                                 {!userProfile.github_verified && (
-                                    <button
-                                        onClick={handleVerifyGithub}
-                                        disabled={verifyingGithub}
-                                        className="flex items-center space-x-2 px-3 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
+                                    <NavLink
+                                        to={`https://projx-yncz.onrender.com/api/auth/github/login?idtoken=${localStorage.getItem('idtoken')}`}
+                                        className="w-full sm:w-auto flex items-center justify-center space-x-2 px-3 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
                                     >
                                         <Shield className="w-4 h-4" />
                                         <span>{verifyingGithub ? 'Verifying...' : 'Verify'}</span>
-                                    </button>
+                                    </NavLink>
                                 )}
                             </div>
                         ) : (
-                            <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg border-2 border-dashed border-gray-600">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-700 rounded-lg border-2 border-dashed border-gray-600 space-y-3 sm:space-y-0">
                                 <div className="flex items-center space-x-3">
                                     <Github className="w-5 h-5 text-gray-400" />
                                     <div>
@@ -280,15 +321,14 @@ const UserProfile = () => {
                                         <p className="text-sm text-gray-400 mt-1">Connect your GitHub account to verify your projects</p>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={handleVerifyGithub}
-                                    disabled={verifyingGithub}
-                                    className="flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                                <NavLink
+                                    to={`https://projx-yncz.onrender.com/api/auth/github/login?idtoken=${localStorage.getItem('idtoken')}`}
+                                    className="w-full sm:w-auto flex items-center justify-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50"
                                 >
                                     <Github className="w-4 h-4" />
                                     <ExternalLink className="w-3 h-3" />
                                     <span>{verifyingGithub ? 'Connecting...' : 'Verify GitHub Account'}</span>
-                                </button>
+                                </NavLink>
                             </div>
                         )}
                     </div>
@@ -343,21 +383,21 @@ const UserProfile = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-400 mb-2">Full Name</label>
-                            <div className="bg-gray-700 rounded-lg px-3 py-2 text-gray-300">
+                            <div className="bg-gray-700 rounded-lg px-3 py-2 text-gray-300 break-words">
                                 {userProfile.full_name || userProfile.fullname || 'Not provided'}
                             </div>
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-400 mb-2">Username</label>
-                            <div className="bg-gray-700 rounded-lg px-3 py-2 text-gray-300">
+                            <div className="bg-gray-700 rounded-lg px-3 py-2 text-gray-300 break-words">
                                 @{userProfile.username}
                             </div>
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-400 mb-2">Email Address</label>
-                            <div className="bg-gray-700 rounded-lg px-3 py-2 text-gray-300">
+                            <div className="bg-gray-700 rounded-lg px-3 py-2 text-gray-300 break-all">
                                 {userProfile.email}
                             </div>
                         </div>
