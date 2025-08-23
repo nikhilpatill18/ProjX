@@ -68,6 +68,15 @@ const ProjectsPage = () => {
         if (selectedComplexity !== 'ALL') {
             filtered = filtered.filter(project => project.complexity == selectedComplexity)
         }
+        if(selectedComplexity=='High'){
+            filtered = filtered.filter(project => project.complexity == selectedComplexity)
+        }
+        if(selectedComplexity=='Medium'){
+            filtered = filtered.filter(project => project.complexity == selectedComplexity)
+        }
+        if(selectedComplexity=='Low'){
+            filtered = filtered.filter(project => project.complexity == selectedComplexity)
+        }
         if (sortBy == 'price-low') {
             console.log("hello");
 
@@ -89,7 +98,15 @@ const ProjectsPage = () => {
     useEffect(() => {
         filterProjects()
     }, [searchTerm, selectedCategory, selectedComplexity, projects, sortBy])
-
+const getComplexityColor = (complexity) => {
+        switch (complexity) {
+            case 'Low': return 'text-green-400 bg-green-400/10'
+            case 'Medium': return 'text-yellow-400 bg-yellow-400/10'
+            case 'High': return 'text-orange-400 bg-orange-400/10'
+            case 'Very High': return 'text-red-400 bg-red-400/10'
+            default: return 'text-gray-400 bg-gray-400/10'
+        }
+    }
 
 
     const ProjectListItem = ({ project }) => (
@@ -221,9 +238,9 @@ const ProjectsPage = () => {
                             className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="ALL">All Levels</option>
-                            <option value="EASY">EASY</option>
+                            <option value="Low">LOW</option>
                             <option value="Medium">MEDIUM</option>
-                            <option value="HARD">HARD</option>
+                            <option value="High">HIGH</option>
                         </select>
 
                         {/* Sort */}
