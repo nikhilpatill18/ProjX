@@ -324,7 +324,7 @@ def getProject():
                 'status': project.status,
                 'bookedmarked':project.id in bookmark_ids,
                 'author':{
-                    #  'avatar':owner_data.profile_photo,
+                     'profile_photo':owner_data.profile_photo,
                      'name':owner_data.full_name,
                      'email':owner_data.email,
                      'username':owner_data.username
